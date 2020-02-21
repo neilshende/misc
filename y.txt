@@ -1,0 +1,4 @@
+id	fc
+2	red
+3	blue
+1	green

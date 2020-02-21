@@ -1,0 +1,23 @@
+m=707157410033 
+n=1000071600000
+m=707189512681 
+n=1000117000000
+xc=1
+yc=1
+print "m is ",m ,"\n"
+while(n<2500000000000) {
+if (xc==1) x=2*m*(m-1)
+if (yc==1) y=n*(n-1)
+if (x==y) break
+if (x>y) {
+n=n+1
+yc=1
+xc=0
+} else {
+m=m+1
+yc=0
+xc=1
+}
+if (m%100000==0) print "reached m ", m ," ", n, "\n"
+}
+print "final m is ", m, "\n"

@@ -1,0 +1,32 @@
+define gcd(m,n) {
+if (m==n) return m
+if (m<n) {
+   scale=0
+   r=n%m
+   if (r==0) return m
+   return gcd(m, r)
+} else {
+  scale=0
+  r=m%n
+  if (r==0) return n
+  return gcd(n, r)
+}
+}
+define phi(nn) {
+  p=1
+  for (j=2; j<nn; j++) {
+     if (gcd(nn,j)==1) p=p+1
+  }
+  scale = 10
+  return nn/p
+}
+maxpp =0
+maxi =0
+for (i=2; i<=1000000;i++) {
+   pp=phi(i)
+   if (pp>maxpp) {
+     maxpp=pp
+     maxi=i
+     print "new max ", pp, " ", i, "\n"
+   }
+}

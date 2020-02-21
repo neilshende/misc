@@ -1,0 +1,20 @@
+This is FUSE like implementation of a user space filesystem.
+After building mxfs.ko and userspace mxadmin, do this:
+
+//mxadmin tool to test filterdriver on dev vm
+sudo su -
+mkdir /maxta
+cd ~builder/git/repo
+insmod ./build/debug/sserv/src/filterdriver/mxfs.ko
+gdb ./build/debug/sserv/tests/mxadmin/mxadmin
+b main
+r
+p gNULLIO=1
+c
+mount -t mxfs /dev/mxfs /maxta
+touch /maxta/bar
+dd if=/maxta/bar of=/dev/null count=100000 bs=512
+#
+#kill gdb inferior
+umount /maxta
+rmmod mxfs

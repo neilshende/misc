@@ -1,0 +1,9 @@
+define isprime(m) {
+for(k=2;k<=sqrt(m);k++) {
+  if (m%k==0) return 0
+}
+return 1
+}
+for (i=1001;i<9999;i++) {
+   if (isprime(i)) print i, "\n"
+}

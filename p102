@@ -1,0 +1,7 @@
+define side(x1, y1, x2, y2, xm, ym) {
+if (y1==y2) {
+   return (-y1 == (ym- y1))
+}
+
+return (ym-y1-(x1-x2)
+
