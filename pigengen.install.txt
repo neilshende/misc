@@ -1,0 +1,13 @@
+install.packages("bnlearn")
+
+install.packages("BiocManager")
+
+BiocManager::install("GO.db")
+#may have to do above two times or install via tgz like WGCNA below.
+
+install.packages("WGCNA")
+#on mac WGCNA may have to be installed from comand line with a downloaded tgz.
+#downloaded the WGCNA.tgz for **MAC** and installed it.
+#R CMD INSTALL WGCNA_1.67.tgz
+
+BiocManager::install("Pigengene")
