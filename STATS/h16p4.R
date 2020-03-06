@@ -2,6 +2,9 @@ pidigits = read.csv("pi.csv", header=TRUE, stringsAsFactors=FALSE)
 n = length(pidigits$digits)
 oddind = pidigits$digits[c(seq(1, n, 2))]
 evenind = pidigits$digits[c(seq(2, n, 2))]
+
+t.test(oddind, evenind)
+
 y = c(oddind, evenind)
 N = rep(length(oddind), 2)
 group = rep(1:2, N)
