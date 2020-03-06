@@ -12,6 +12,14 @@ data = data.frame(y=y, group=factor(group))
 fit = lm(y ~ group, data)
 anova(fit)
 
+for (i in 1:25) {
+ T = rt(10000, i)
+ TT = T^2
+ F = rf(10000, 1, i)
+ message (i)
+ message ("\t mean ", mean(TT), " ", mean(F))
+ message ("\t sd " , sd(TT),  " ", sd(F))
+}
 
 tmp = tapply(y, group, stem)
 tmpfn = function(x) c(sum = sum(x), mean = mean(x), var = var(x),  n = length(x))
