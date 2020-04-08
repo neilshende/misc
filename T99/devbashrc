@@ -25,18 +25,15 @@ if [[ $? != 0 ]]; then
     echo failed to build UI
     return
 fi
-B
+BP && BE && RMS && MK
 
 if [[ $? != 0 ]]; then
     echo failed to build platform
     return
 fi
-sc
+echo now run:
+echo sc
 
-if [[ $? != 0 ]]; then
-    echo failed to build sc
-    return
-fi
 }
 function dot()
 {
