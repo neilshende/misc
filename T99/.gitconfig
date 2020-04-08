@@ -1,0 +1,6 @@
+[include]
+       path = /auto/git/config
+
+[user]
+	name = Vivek Shende
+	email = vshende@tintri.com

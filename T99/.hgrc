@@ -1,0 +1,48 @@
+#
+
+%include /auto/hg/tintri/hgrc.default
+
+[ui]
+username = vshende
+editor = vim
+
+[extensions]
+color =
+# enable extdiff extension (Extended Diff)
+hgext.extdiff =
+reviewboard = /u/craig/SRC/hgreviewboard/hg
+strip =
+
+[extdiff]
+# configure extended diff to use colordiff (requires colordiff installed in your system)
+cmd.cdiff = colordiff
+opts.cdiff = -uprN
+
+[color]
+# configure colors for each possible hg status
+status.modified = blue bold
+status.added = green bold
+status.removed = red bold
+status.deleted = cyan bold
+status.unknown = magenta bold
+status.ignored = white bold
+# and for hg diff output also
+diff.diffline = bold
+diff.extended = cyan bold
+diff.file_a = red bold
+diff.file_b = green bold
+diff.hunk = magenta
+diff.deleted = red
+diff.inserted = green
+diff.changed = white
+diff.trailingwhitespace = bold red_background
+
+[extensions]
+pager =
+
+[pager]
+pager = LESS='FRX' less
+attend = log outgoing diff glog in blog incoming
+
+[extensions]
+record =

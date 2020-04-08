@@ -1,0 +1,267 @@
+export TOPDIR=/data/workspaces/mybuild
+alias td='cd $TOPDIR'
+alias ff='find . -type f -iname '
+alias fa='find . -iname '
+alias scr='screen -r'
+function wssh
+{
+    cp ~/.ssh/known_hosts ~/.ssh/kh
+    sed $1d < ~/.ssh/kh > ~/.ssh/known_hosts
+}
+function bundles()
+{
+sudo mount -t cifs -o username=tintri/$USER,uid=$USER,gid=$USER,noperm,ro,vers=1.0 //support-nas-n.tintri.com/Bundles /mnt/Bundles
+}
+function buildall()
+{
+source $TOPDIR/platform/misc/scripts/devel_funcs
+FS
+if [[ $? != 0 ]]; then
+    echo failed to build FS
+    return
+fi
+UI
+if [[ $? != 0 ]]; then
+    echo failed to build UI
+    return
+fi
+B
+
+if [[ $? != 0 ]]; then
+    echo failed to build platform
+    return
+fi
+sc
+
+if [[ $? != 0 ]]; then
+    echo failed to build sc
+    return
+fi
+}
+function dot()
+{
+source $TOPDIR/platform/misc/scripts/devel_funcs
+source ~/.bashrc
+source ~/devbashrc
+}
+function hclone()
+{
+cd $TOPDIR
+hg clone http://hg.tintri.com/fs
+hg clone http://hg.tintri.com/platform
+hg clone http://hg.tintri.com/ui
+}
+function build_ui0()
+{
+cd $TOPDIR/ui
+./antbuild clean
+}
+function build_fs()
+{
+cd $TOPDIR/fs
+scons BUILDDIR=$TOPDIR/bld_rs BUILDTYPE=release tree
+/auto/savedpackages/bin/import_build_package.py -d ../pkgimport -i imports.yaml
+cd $TOPDIR/bld_rs
+scons -j 2 # threads = 2 * num cpus works well
+
+# The above command builds the test/ folder as well, which contains the unit tests and takes a while.
+# If you're not planning to run unit tests, you can build only txos binaries by doing
+scons -j 2 src
+}
+function build_ui()
+{
+cd $TOPDIR/ui
+./antbuild clean
+./antbuild smis-clean
+./antbuild
+}
+function build_os()
+{
+cd $TOPDIR/platform/os
+./build.sh build -j2 #  [-j <threads>]
+./build.sh install
+cd $TOPDIR/platform/distro/extpkgs/
+./build.sh -e build -j2 # [-j <threads>]
+./build.sh -e install
+}
+function build_rpms
+{
+if [[ $1 -eq "-r" ]]; then
+cd $TOPDIR/platform
+ sudo distro/tools/mkrel  -f  -b $TOPDIR -r $TOPDIR/bld_rs -u $TOPDIR/ui -e fs -e ui -e util # for rebuild
+else
+cd $TOPDIR/platform
+ sudo distro/tools/mkrel  -b $TOPDIR -r $TOPDIR/bld_rs -u $TOPDIR/ui
+fi
+}
+alias bra='ssh root@10.29.9.112'
+alias brb='ssh root@10.29.10.112'
+alias brv='ssh root@10.29.8.112'
+alias pc18='ssh root@10.29.15.208'
+alias zc1='ssh root@10.29.15.250'
+alias zc2='ssh root@10.29.15.252'
+
+alias gb='hg branch'
+alias gs='hg status'
+alias gsc='hg status --change .'
+alias gd='hg diff'
+alias gc='hg commit --amend'
+alias gl='hg log -b .'
+alias gll='hg log -G'
+alias gclean='hg status -un|xargs rm'
+alias gpull='hg pull --rebase'
+alias gpush='hg push -r .'
+alias guncommit='hg strip -r .'
+alias gupdate='hg tupdate'
+alias gbackup='hg backup'
+alias greview='hg review'
+alias gcollapse='hg histedit -o'
+alias fs='pushd $TOPDIR/fs'
+alias platform='pushd $TOPDIR/platform'
+alias ui='pushd $TOPDIR/ui'
+function grevert
+{
+    hg revert $1
+    rm $1.orig
+}
+function review
+{
+    gupdate && gcollapse && gbackup && greview
+}
+function smoke
+{
+    GateForChicken && scons -k test && scons -j8
+}
+function grevertall
+{
+    hg status -mn | xargs hg revert 
+}
+function dofio
+{
+    fio --thread --direct=1 --bs=512 --ioengine=libaio --iodepth=1 --ramp_time=10 --runtime=300 --rw=randwrite --time_based --name=mpath3 --filename=$1
+}
+function connect
+{
+    while true; do ssh ${1}; sleep 2; done
+}
+
+function gde
+{
+    hg export $1
+}
+
+
+function gack
+{
+    grep -r "$1" *
+}
+
+function test
+{
+   echo $#
+   echo $*
+}
+function loop
+{
+    while true; do a=`$*`;echo $a; sleep 2; done
+}
+function looper
+{
+    if [ $# -ne 3 ] ;then
+        echo Usage: looper \"cmd\" loopcnt delay
+        return
+    fi
+    for i in `seq 1 $2`
+    do 
+        a=`$1`
+        echo $i">>" $a
+        sleep $3
+    done
+}
+function gcherry
+{
+    if [ $# -ne 3 ] ;then
+        echo Usage: gcherry dest-branch src-branch cherry
+        return
+    fi
+    dest=$1
+    src=$2
+    cherry=$3
+    hg update $dest
+    hg transplant -b $src $cherry
+    echo Dont forget to push.
+    #hg push
+}
+function ggraft
+{
+    if [ $# -ne 2 ] ;then
+        echo Usage: ggraft dest-branch cherry
+        return
+    fi
+    dest=$1
+    cherry=$2
+    hg pull
+    hg update $dest
+    hg graft $cherry
+    echo Dont forget to push.
+    #hg push
+}
+function pi
+{
+  if [ $# -ne 1 ] ;then
+      scale=100
+  else
+      scale=$1
+  fi
+  bc << END-OF-INPUT
+  scale=$scale
+  define myfunc(s,j){
+    return (s*4)/(j*(j+1)*(j+2))
+  }
+  s=1
+  j=2
+  pi=3
+  for (i=1; i<scale; i++) {
+    pi += myfunc(s,j)
+    j=j+2
+    s=-s
+  }
+print pi, "\n"
+END-OF-INPUT
+}
+
+function unpack()
+{
+    mkdir /mnt/bdom
+    mount $(list_disks -i)1 /mnt/bdom
+    mkdir /root/ird-explode
+    cd /root/ird-explode
+    N=$(cat /proc/cmdline | awk '{print $2}' | cut -c 10)
+    gunzip -c /mnt/bdom/initrd-p${N} | cpio -iv
+}
+
+function pack()
+{
+    cd /root/ird-explode
+    N=$(cat /proc/cmdline | awk '{print $2}' | cut -c 10)
+    find . | cpio -H newc -o | gzip -9 > /mnt/bdom/initrd-p${N}
+}
+
+function cleanup-mount()
+{
+    cd ~
+    rm -rf /root/ird-explode/
+    umount /mnt/bdom
+}
+
+function dog-off()
+{
+    ipmitool mc watchdog off
+}
+
+function dog-on()
+{
+    echo -n 'v' > /dev/watchdog
+    ipmitool mc watchdog reset
+}
+

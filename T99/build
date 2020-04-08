@@ -1,0 +1,2 @@
+g++ -I/auto/toolchain/toolchain_20191205-fafe7e30f696/include/ -g NvmeApiTester.cpp NvmeApi.cpp -o nvme-tester
+g++ -I/auto/toolchain/toolchain_20191111-ed8c185369be-craig-kernel-headers/include/ -g scsiApi.c sgApiTester.cpp -o sg-tester
