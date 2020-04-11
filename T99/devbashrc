@@ -15,16 +15,19 @@ sudo mount -t cifs -o username=tintri/$USER,uid=$USER,gid=$USER,noperm,ro,vers=1
 function buildall()
 {
 source $TOPDIR/platform/misc/scripts/devel_funcs
+fs
 FS
 if [[ $? != 0 ]]; then
     echo failed to build FS
     return
 fi
+ui
 UI
 if [[ $? != 0 ]]; then
     echo failed to build UI
     return
 fi
+platform
 BP && BE && RMS && MK
 
 if [[ $? != 0 ]]; then
