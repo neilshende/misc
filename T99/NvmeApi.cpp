@@ -16,7 +16,7 @@
 #include <stdbool.h>
 #include <iostream>
 #include <fstream>
-//#include <fwk/String.h>
+#include <fwk/String.h>
 #include "NvmeApi.h"
 #include "nvme.h"
 #include <linux/nvme_ioctl.h>
@@ -71,24 +71,24 @@ nvme_resv_report( struct nvme_reservation_status *status, __u32 cdw11, uint64_t 
     /* test Extended Data Structure bit */
     if ( ( cdw11 & 0x1 ) == 0 ) {
         if ( status->rtype == 1 ) {
-	   regctl = status->regctl[0] | ( status->regctl[1] << 8 );
-	   for ( i = 0; i < regctl; i++ ) {
-	       if ( status->regctl_ds[i].rcsts ) {
-	          key = le64toh( status->regctl_ds[i].rkey );
-	          return 1;
-	       }
-	   }
+            regctl = status->regctl[0] | ( status->regctl[1] << 8 );
+            for ( i = 0; i < regctl; i++ ) {
+                if ( status->regctl_ds[i].rcsts ) {
+                    key = le64toh( status->regctl_ds[i].rkey );
+                    return 1;
+                }
+            }
         }
     } else {
         struct nvme_reservation_status_ext *ext_status = ( struct nvme_reservation_status_ext * )status;
         if ( status->rtype == 1 ) {
-	   regctl = status->regctl[0] | ( status->regctl[1] << 8 );
-	   for ( i = 0; i < regctl; i++ ) {
-	       if ( ext_status->regctl_eds[i].rcsts ) {
-	          key = le64toh( ext_status->regctl_eds[i].rkey );
-	          return 1;
-	       }
-	   }
+            regctl = status->regctl[0] | ( status->regctl[1] << 8 );
+            for ( i = 0; i < regctl; i++ ) {
+                if ( ext_status->regctl_eds[i].rcsts ) {
+                    key = le64toh( ext_status->regctl_eds[i].rkey );
+                   return 1;
+                }
+            }
         }
     }
     return 0;
@@ -322,9 +322,8 @@ NvmeChangeHelper( const char *dev, uint64_t key ) {
     __u8 rrega = 2; //change register
     __u8 cptpl = 3; //reservations persist across power loss.
     bool iekey = 0; //don't ignore existing.
-    __u64 crkey = ckey;
     __u64 nrkey = key;
-    __le64 payload[2] = { htole64( crkey ), htole64( nrkey ) };
+    __le64 payload[2] = { 0, htole64( nrkey ) };
     __u32 cdw10 = ( rrega & 0x7 ) | ( iekey ? 1 << 3 : 0 ) | cptpl << 30;
     struct nvme_passthru_cmd cmd;
 
@@ -337,6 +336,9 @@ NvmeChangeHelper( const char *dev, uint64_t key ) {
        err = NvmeAcquireHelper( dev, key );
        return err;
     }
+
+    // Populate payload with the current key
+    payload[0] = htole64( ckey );
 
     fd = open_dev( dev );
     if ( fd < 0 ) {
@@ -380,38 +382,63 @@ NvmeChangeHelper( const char *dev, uint64_t key ) {
 // If the reservation is acquired by this controller, it works the same way.
 //   we reserve the key and release it.
 int
-NvmeResetHelperx( const char *dev, uint64_t key ) {
-    int err1;
-    int err2;
-    int err3 = 0;
-    uint64_t localkey = 0;
+NvmeResetHelper( const char *dev, uint64_t key ) {
     int fd = -1;
-    __u32 nsid;
+    int i, regctl;
+    int err, err2, err3;
+    __u32 nsid = 0;
+    __u32 numd = 0x1000;
+    __u32 cdw11 = 0;
+    struct nvme_reservation_status *status;
+    struct nvme_passthru_cmd cmd;
 
-    err1 = NvmeCheckHelper( dev, localkey );
-    if ( err1 == -1 ) {
-        return err1;
+    fd = open_dev( dev );
+    if ( fd < 0 ) {
+        return -1;
     }
-    if ( localkey != 0 ) {
-       fd = open_dev( dev );
-       if ( fd < 0 ) {
-           return -1;
-       }
 
-       nsid = nvme_get_nsid( fd );
-       if ( nsid == 0 ) {
-          close( fd );
-          return -1;
-       }
-       err2 = reserve_register( fd, nsid, localkey );
+    nsid = nvme_get_nsid( fd );
+    if ( nsid == 0 ) {
        close( fd );
-       if ( err2 == -1 ) {
-          return -1;
-       }
-
-       err3 = NvmeReleaseHelper( dev, localkey );
+       return -1;
     }
-    return ( err3 == 0 ) ? 0 : -1;
+
+    if ( posix_memalign( ( void ** )&status, getpagesize(), ( numd + 1 ) * 4 ) ) {
+       close( fd );
+       return -1;
+    }
+    memset( status, 0, ( numd + 1 ) * 4 );
+
+    memset( &cmd, 0, sizeof( cmd ) );
+    cmd.opcode = nvme_cmd_resv_report;
+    cmd.nsid = nsid;
+    cmd.cdw10 = numd;
+    cmd.cdw11 = cdw11;
+    cmd.addr = ( __u64 )( unsigned long ) ( status );
+    cmd.data_len    = ( numd + 1 ) * 4;
+    cmd.timeout_ms  = NVME_TIMEOUT;
+
+    err = ioctl( fd, NVME_IOCTL_IO_CMD, &cmd );
+    if ( err == 0 ) {
+        regctl = status->regctl[0] | ( status->regctl[1] << 8 );
+        for (i=0; i < regctl; i++) {
+            key = le64toh( status->regctl_ds[i].rkey );
+            err2 = reserve_register( fd, nsid, key );
+            if ( err2 == 0 ) {
+                err3 = NvmeReleaseHelper( dev, key );
+                if ( err3 != 0 ) {
+                    err = -1;
+                }
+            } else {
+                err = -1;
+            }
+        }
+    } else {
+        err = -1;
+    }
+    free( status );
+    close( fd );
+    return err;
 }
 
 //
@@ -473,29 +500,114 @@ NvmeCheckHelper( const char *dev, uint64_t &key ) {
     return err;
 }
 
+static int
+nvme_submit_admin_passthru(int fd, struct nvme_passthru_cmd *cmd)
+{
+    return ioctl(fd, NVME_IOCTL_ADMIN_CMD, cmd);
+}
+
+/*
+ * nvme_get_log14 - get a log page using cdw10-cdw14
+ * fd - file descriptor
+ * nsid - name space id
+ * log_id - type of log to get
+ * lsp - log specific field - generally 0
+ * lpo - log page offset
+ * lsi - log specific identifier
+ * rae - retain async event - generally 0
+ * uuid_ix - uuid index if controller supports this
+ * data_len - data length in bytes
+ * data - pointer to data buffer to return.
+ */
+
+
+int
+nvme_get_log14(int fd, __u32 nsid, __u8 log_id, __u8 lsp, __u64 lpo,
+               __u16 lsi, bool rae, __u8 uuid_ix, __u32 data_len, void *data)
+{
+    struct nvme_admin_cmd cmd;
+    memset( &cmd, 0, sizeof( cmd ) );
+    cmd.opcode         = nvme_admin_get_log_page;
+    cmd.nsid           = nsid;
+    cmd.addr           = (__u64)(uintptr_t) data;
+    cmd.data_len       = data_len;
+
+    __u32 numd = (data_len >> 2) - 1;
+    __u16 numdu = numd >> 16, numdl = numd & 0xffff;
+
+    cmd.cdw10 = log_id | (numdl << 16) | (rae ? 1 << 15 : 0);
+    if (lsp)
+        cmd.cdw10 |= lsp << 8;
+
+    cmd.cdw11 = numdu | (lsi << 16);
+    cmd.cdw12 = lpo;
+    cmd.cdw13 = (lpo >> 32);
+    cmd.cdw14 = uuid_ix;
+
+    return nvme_submit_admin_passthru(fd, &cmd);
+
+}
+
+static inline int
+nvme_get_log13(int fd, __u32 nsid, __u8 log_id, __u8 lsp,
+               __u64 lpo, __u16 lsi, bool rae, __u32 data_len,
+               void *data)
+{
+    return nvme_get_log14( fd, nsid, log_id, lsp, lpo, lsi, rae, 0,
+                          data_len, data );
+}
+
+
+int
+nvme_get_log(int fd, __u32 nsid, __u8 log_id, bool rae,
+             __u32 data_len, void *data)
+{
+    __u8 *ptr = (__u8*)data;
+    __u32 offset = 0, xfer_len = data_len;
+    int ret;
+
+    /*
+     * 4k is the smallest possible transfer unit, so by
+     * restricting ourselves for 4k transfers we avoid having
+     * to check the MDTS value of the controller.
+     */
+    do {
+        xfer_len = data_len - offset;
+        if ( xfer_len > 4096 ) {
+            xfer_len = 4096;
+        }
+
+        ret = nvme_get_log13( fd, nsid, log_id, NVME_NO_LOG_LSP,
+                             offset, 0, rae, xfer_len, ptr );
+        if ( ret ) {
+	    return ret;
+	}
+
+        offset += xfer_len;
+        ptr += xfer_len;
+    } while ( offset < data_len );
+
+    return 0;
+}
+
+int
+nvme_smart_log(int fd, __u32 nsid, struct nvme_smart_log_ *smart_log)
+{
+    return nvme_get_log( fd, nsid, NVME_LOG_SMART, false,
+                        sizeof( *smart_log ), smart_log );
+}
+
 //
-// API function to reset the reservation.
-//   Other controller may have acquired the reservation,
-//   it will be released.
-//
+// API function to check Smart Log
 // returns
 //     0 on success
 //     -1 on ioctl failure
 //
-// Note that we reserve the same key acquired by the other controller.
-//   when we release this key, the reservation is lost by the other controller.
-// If the reservation is acquired by this controller, it works the same way.
-//   we reserve the key and release it.
-int
-NvmeResetHelper( const char *dev, uint64_t key ) {
+//
+int NvmeSmartHelper( const char *dev, short cntlid, struct nvme_smart_log_ *smart_log ) {
     int fd = -1;
-    int i, regctl;
-    int err, err2, err3;
+    int err;
     __u32 nsid = 0;
-    __u32 numd = 0x1000;
-    __u32 cdw11 = 0;
-    struct nvme_reservation_status *status;
-    struct nvme_passthru_cmd cmd;
 
     fd = open_dev( dev );
     if ( fd < 0 ) {
@@ -508,39 +620,8 @@ NvmeResetHelper( const char *dev, uint64_t key ) {
        return -1;
     }
 
-    if ( posix_memalign( ( void ** )&status, getpagesize(), ( numd + 1 ) * 4 ) ) {
-       close( fd );
-       return -1;
-    }
-    memset( status, 0, ( numd + 1 ) * 4 );
+    err = nvme_smart_log( fd, nsid, smart_log );
 
-    memset( &cmd, 0, sizeof( cmd ) );
-    cmd.opcode = nvme_cmd_resv_report;
-    cmd.nsid = nsid;
-    cmd.cdw10 = numd;
-    cmd.cdw11 = cdw11;
-    cmd.addr = ( __u64 )( unsigned long ) ( status );
-    cmd.data_len    = ( numd + 1 ) * 4;
-    cmd.timeout_ms  = NVME_TIMEOUT;
-
-
-    err = ioctl( fd, NVME_IOCTL_IO_CMD, &cmd );
-    if ( err == 0 ) {
-	regctl = status->regctl[0] | ( status->regctl[1] << 8 );
-	for (i=0; i < regctl; i++) {
-            key = le64toh( status->regctl_ds[i].rkey );
-                err2 = reserve_register( fd, nsid, key );
-                if ( err2 == 0 ) {
-                    err3 = NvmeReleaseHelper( dev, key );
-		    if ( err3 != 0 ) {
-			err = err3;
-		    }
-                }
-	}
-    } else {
-        err = -1;
-    }
-    free( status );
     close( fd );
     return err;
 }
