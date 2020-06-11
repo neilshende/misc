@@ -67,17 +67,28 @@ open_dev( const char *dev )
 static int
 nvme_resv_report( struct nvme_reservation_status *status, __u32 cdw11, uint64_t &key )
 {
+    int i, regctl;
     /* test Extended Data Structure bit */
     if ( ( cdw11 & 0x1 ) == 0 ) {
         if ( status->rtype == 1 ) {
-           key = le64toh( status->regctl_ds[0].rkey );
-           return 1;
+	   regctl = status->regctl[0] | ( status->regctl[1] << 8 );
+	   for ( i = 0; i < regctl; i++ ) {
+	       if ( status->regctl_ds[i].rcsts ) {
+	          key = le64toh( status->regctl_ds[i].rkey );
+	          return 1;
+	       }
+	   }
         }
     } else {
         struct nvme_reservation_status_ext *ext_status = ( struct nvme_reservation_status_ext * )status;
         if ( status->rtype == 1 ) {
-            key = le64toh( ext_status->regctl_eds[0].rkey );
-            return 1;
+	   regctl = status->regctl[0] | ( status->regctl[1] << 8 );
+	   for ( i = 0; i < regctl; i++ ) {
+	       if ( ext_status->regctl_eds[i].rcsts ) {
+	          key = le64toh( ext_status->regctl_eds[i].rkey );
+	          return 1;
+	       }
+	   }
         }
     }
     return 0;
@@ -369,7 +380,7 @@ NvmeChangeHelper( const char *dev, uint64_t key ) {
 // If the reservation is acquired by this controller, it works the same way.
 //   we reserve the key and release it.
 int
-NvmeResetHelper( const char *dev, uint64_t key ) {
+NvmeResetHelperx( const char *dev, uint64_t key ) {
     int err1;
     int err2;
     int err3 = 0;
@@ -454,6 +465,78 @@ NvmeCheckHelper( const char *dev, uint64_t &key ) {
     if ( err == 0 ) {
         key = 0;
         err = nvme_resv_report( status, cdw11, key );
+    } else {
+        err = -1;
+    }
+    free( status );
+    close( fd );
+    return err;
+}
+
+//
+// API function to reset the reservation.
+//   Other controller may have acquired the reservation,
+//   it will be released.
+//
+// returns
+//     0 on success
+//     -1 on ioctl failure
+//
+// Note that we reserve the same key acquired by the other controller.
+//   when we release this key, the reservation is lost by the other controller.
+// If the reservation is acquired by this controller, it works the same way.
+//   we reserve the key and release it.
+int
+NvmeResetHelper( const char *dev, uint64_t key ) {
+    int fd = -1;
+    int i, regctl;
+    int err, err2, err3;
+    __u32 nsid = 0;
+    __u32 numd = 0x1000;
+    __u32 cdw11 = 0;
+    struct nvme_reservation_status *status;
+    struct nvme_passthru_cmd cmd;
+
+    fd = open_dev( dev );
+    if ( fd < 0 ) {
+        return -1;
+    }
+
+    nsid = nvme_get_nsid( fd );
+    if ( nsid == 0 ) {
+       close( fd );
+       return -1;
+    }
+
+    if ( posix_memalign( ( void ** )&status, getpagesize(), ( numd + 1 ) * 4 ) ) {
+       close( fd );
+       return -1;
+    }
+    memset( status, 0, ( numd + 1 ) * 4 );
+
+    memset( &cmd, 0, sizeof( cmd ) );
+    cmd.opcode = nvme_cmd_resv_report;
+    cmd.nsid = nsid;
+    cmd.cdw10 = numd;
+    cmd.cdw11 = cdw11;
+    cmd.addr = ( __u64 )( unsigned long ) ( status );
+    cmd.data_len    = ( numd + 1 ) * 4;
+    cmd.timeout_ms  = NVME_TIMEOUT;
+
+
+    err = ioctl( fd, NVME_IOCTL_IO_CMD, &cmd );
+    if ( err == 0 ) {
+	regctl = status->regctl[0] | ( status->regctl[1] << 8 );
+	for (i=0; i < regctl; i++) {
+            key = le64toh( status->regctl_ds[i].rkey );
+                err2 = reserve_register( fd, nsid, key );
+                if ( err2 == 0 ) {
+                    err3 = NvmeReleaseHelper( dev, key );
+		    if ( err3 != 0 ) {
+			err = err3;
+		    }
+                }
+	}
     } else {
         err = -1;
     }
