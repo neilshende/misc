@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 int main() {
+int count, partno;
+char *name;
+char *devPart="nvme10n1p1";
+count = sscanf( devPart, "%10[^p]p%d", name, &partno );
 short int x =32767;
 x = x+1;
 x = x+1;
