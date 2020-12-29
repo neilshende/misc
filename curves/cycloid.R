@@ -10,7 +10,16 @@ m = 1/4
 n =3
 plot(m*sin(x*n)+(1-m)*cos(x),m*cos(n*x)+(1-m)*sin(x), col="blue", type="l") #asteroid 4
 
-#etc.
+#etc. n=20, m=.5 below produces a pleasant mandala. 
+# but let's explore simple ones: (n<8) (m is ratio of radii of circles) 
+# This represents a rolling a small circle inside a big circle.
+# to simulate small circle rolling outside the big one, change (sin+cos, cos+sin) to (cos+cos, sin+sin)
+for (n in 2:7) {
+for (m in seq(.1,1,.1)) {
+   plot(m*sin(x*n)+(1-m)*cos(x),m*cos(n*x)+(1-m)*sin(x), col="blue", type="l")
+   Sys.sleep(ifelse((n==2)&&(m==.1),5,1))
+}
+}
 
 library(RColorBrewer)
 nc <- 60
