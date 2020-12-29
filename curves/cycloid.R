@@ -40,6 +40,9 @@ for (n2 in seq(0,100,step)) {
     if (m >.8) s = -1 
 }
 
+#Nice border on septagon, with next
+m2=.1; n2=9.8; m=.1;n=6 #
+plot(m2*cos(n2*x)+m*sin(n*x)+cos(x),m2*sin(n2*x)+m*cos(n*x)+sin(x), col=sample(col_vector, nc), type="l")
 
 #hypotrochoids
 for (a in 20:30) {
@@ -50,3 +53,13 @@ for (a in 20:30) {
      }
    }
 }
+
+#five point star
+a=5; b=3; h=4
+plot((a-b)*cos(x) + h*cos(((a-b)/b)*x), (a-b)*sin(x) - h*sin(((a-b)/b)*x), col="red", type="l")
+#seven
+a=7; b=5; h=6 #not so beautiful as next:
+a=7; b=3; h=2 #seven but with 16 regions in venn diagram
+#reverse lotus
+a=9;b=11;h=12
+
