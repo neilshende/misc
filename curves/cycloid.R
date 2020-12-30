@@ -58,8 +58,21 @@ for (a in 20:30) {
 a=5; b=3; h=4
 plot((a-b)*cos(x) + h*cos(((a-b)/b)*x), (a-b)*sin(x) - h*sin(((a-b)/b)*x), col="red", type="l")
 #seven
-a=7; b=5; h=6 #not so beautiful as next:
-a=7; b=3; h=2 #seven but with 16 regions in venn diagram
+a=7; b=5; h=6 #seven wide petals by connecting i node to i+2
+a=7; b=3; h=2 #seven connect i to i+3 until star is formed.
 #reverse lotus
 a=9;b=11;h=12
+
+#Lissajous Curve
+w1=9;w2=7;d1=pi/3;d2=pi/2
+plot(cos(w1*x-d1), cos(w2*x-d2), col="red", type="l")
+
+#rose
+n=7 #petals
+plot(sin(n*x)*cos(x), sin(n*x)*sin(x), col="red", type="l")
+
+#spiral
+plot(sqrt(x)*cos(x), sqrt(x)*sin(x) , col="red", type="l")
+plot(log(x)*cos(x), log(x)*sin(x) , col="red", type="l") #with a surpris"e".
+
 
