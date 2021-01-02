@@ -79,11 +79,13 @@ plot(log(x)*cos(x), log(x)*sin(x) , col="red", type="l") #with a surpris"e".
 n=6 
 t=seq(0,2*pi,2*pi/n)
 r=seq(1,0,-.01)
-plot(cos(t), sin(t), type="l")
+plot(cos(t), sin(t), type="l", col="red")
 for (i in r) {
-   lines(i*cos(t+i-1), i*sin(t+i-1))
+   lines(i*cos(t+i-1), i*sin(t+i-1), col="red")
    Sys.sleep(.1) #appricate the animation.
 }
-
-
-
+#add a moire pattern by drawing mirror image.
+ for (i in r) {
+ lines(i*cos(t-i+1), i*sin(t-i+1), col="blue")
+ Sys.sleep(.1)
+ }
