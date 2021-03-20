@@ -29,6 +29,10 @@ int main(int argc, char *argv[]) {
       if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, "..")) {
          continue;
       }
+      if (de->d_type != DT_LNK) {
+         cout << "SKIP " << de->d_name << endl;
+         continue;
+      }
       char snapshot_dir[PATH_MAX+1];
       //char *r = realpath(de->d_name, snapshot_dir);
       //if (r == nullptr) {
