@@ -25,6 +25,8 @@ int main(int argc, char *argv[]) {
    string lookup_path = argv[2];
    struct dirent *de;
    DIR *dir = opendir(data_dir_.c_str());
+   chdir(data_dir_.c_str()); //On NFS readdir does not return all entries.
+   //rewinddir(dir) 
    while ((de = readdir(dir))) {
       if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, "..")) {
          continue;
