@@ -37,7 +37,7 @@ function findunused() {
   return 1
 }
 
-function findnewdev() {
+function findnewdev_x() {
    local found
    local odev
    local ndev
@@ -62,12 +62,13 @@ function findnewdev() {
    return 1
 }
 
-function findnewdev_v2() {
+function findnewdev() {
    local found
    local odev
    local ndev
    local -a oldlist="$@"
-   local -a newlist=$(set -o pipefail; lsblk --output NAME | grep ^xv)
+#   local -a newlist=$(set -o pipefail; lsblk --output NAME | grep ^xv)
+   local -a newlist=$(set -o pipefail; lsblk | awk '/ disk /{print $1}')
    if [ $? != 0 ]; then
       return 1
    fi
@@ -181,16 +182,16 @@ case "$CRTOOLS_SCRIPT_ACTION" in
            echo "$MY_NAME $(date): snasphot info file is not present, exiting normally."
            exit 0
         fi
-        usev2="false"
-        nl=$(nvme list)
-        rc=$?
-        if [ $rc != 0 ]; then
-           echo "$MY_NAME $(date): unable to run nvme command."
-           exit $rc
-        fi
-        if [ -z $nl ]; then
-           usev2="true"
-        fi
+        #usev2="false"
+        #nl=$(nvme list)
+        #rc=$?
+        #if [ $rc != 0 ]; then
+        #   echo "$MY_NAME $(date): unable to run nvme command."
+        #   exit $rc
+        #fi
+        #if [ -z $nl ]; then
+        #   usev2="true"
+        #fi
         snapid=$(set -o pipefail; /bin/cat ebs_snap.info | awk '/SnapId :/{print $3}')
         rc=$?
         if [ $rc != 0 ]; then
@@ -304,11 +305,12 @@ case "$CRTOOLS_SCRIPT_ACTION" in
            fi
            return 1
         fi
-        if [ $usev2 == "true" ]; then
-           savelist=$(set -o pipefail; lsblk --output NAME | grep ^xv)
-        else
-           savelist=$(set -o pipefail; nvme list 2>/dev/null | awk '/^\/dev\//{print $1}')
-        fi
+        #if [ $usev2 == "true" ]; then
+        #   savelist=$(set -o pipefail; lsblk --output NAME | grep ^xv)
+        #else
+        #   savelist=$(set -o pipefail; nvme list 2>/dev/null | awk '/^\/dev\//{print $1}')
+        #fi
+        savelist=$(set -o pipefail; lsblk | awk '/ disk /{print $1}')
         rc=$?
         if [ $rc != 0 ]; then
            echo "$MY_NAME $(date): unable to get device list."
@@ -350,13 +352,13 @@ case "$CRTOOLS_SCRIPT_ACTION" in
            return 1
         fi
 
-        if [ $usev2 == "true" ]; then
-           newdev=$(findnewdev_v2 "${savelist[@]}")
-           rc=$?
-        else
+        #if [ $usev2 == "true" ]; then
+        #   newdev=$(findnewdev_v2 "${savelist[@]}")
+        #   rc=$?
+        #else
            newdev=$(findnewdev "${savelist[@]}")
            rc=$?
-        fi
+        #fi
         if [ $rc == 0 ]; then
            echo "$MY_NAME $(date): mounting $newdev at $mountpt."
            mount $newdev $mountpt
