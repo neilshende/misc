@@ -43,10 +43,10 @@ function dircontains {
 
     # get directories from $(pwd)
     cd "${parent}"
-    parent_pwd="$(pwd)"
+    parent_pwd="$(pwd)/"
     cd "${curdir}"  # to avoid errors due relative paths
     cd "${dir_child}"
-    child_pwd="$(pwd)"
+    child_pwd="$(pwd)/"
 
     # checking if is parent
     [ "${child_pwd:0:${#parent_pwd}}" = "${parent_pwd}" ] && result=0
