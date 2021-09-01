@@ -2,7 +2,7 @@ class Dog:
 	species = "poopy"
 	def __init__(self, name, age):
 		self.name = name
-		self.age = age
+		self.age = int(age)
 	def __str__(self):
 		return "{} is {} years old".format(self.name, self.age)
 	def speak(self, words):
@@ -18,3 +18,6 @@ a.speak("bow wow")
 
 b = Pitbull("sparky", 3)
 b.speak()
+
+c = Dog("int", "100")
+print(c)
