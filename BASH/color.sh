@@ -1,4 +1,12 @@
 #!/bin/bash
+red=$'\033[0;31m'
+green=$'\033[0;32m'
+black=$'\033[0;29m'
+blue=$'\033[0;34m'
+purple=$'\033[0;35m'
+skyblue=$'\033[0;36m'
+yellow=$'\033[0;33m'
+
 function red() {
 printf "\033[0;31m"
 }
