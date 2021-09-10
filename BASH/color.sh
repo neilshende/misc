@@ -6,7 +6,14 @@ blue=$'\033[0;94m'
 purple=$'\033[0;95m'
 skyblue=$'\033[0;96m'
 yellow=$'\033[0;93m'
-
+bold=$'\033[1m'
+normal=$'\033[0m'
+function bold() {
+printf "\033[1m"
+}
+function normal() {
+printf "\033[0m"
+}
 function red() {
 printf "\033[0;91m"
 }
