@@ -422,7 +422,7 @@ int compute(int p, int *rx, int *cx, int *rr, int *cc)
     while (count < 5) {
        *rx=players[p-1][i][0];
        *cx=players[p-1][i][1];
-        if (find_empty(*rx, *cx, rr, cc)) i = (i==3?0:i++);
+        if (find_empty(*rx, *cx, rr, cc)) i = (i==3?0:i+1);
        else return 0;
         count++;
     }
