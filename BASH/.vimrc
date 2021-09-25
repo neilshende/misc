@@ -7,3 +7,4 @@ set listchars=tab:>-,trail:.
 set list
 highlight SpecialKey ctermfg=red
 nnoremap <F5> :let _s=@/<Bar>:%s/\s\+$//e<Bar>:let @/=_s<Bar><CR>
+map <f12> :set list!\|set number!<cr>
