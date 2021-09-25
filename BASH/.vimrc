@@ -1,3 +1,4 @@
+syntax on
 set nu
 set paste
 set ffs=unix
