@@ -79,7 +79,7 @@ for (r=0; r<3; r++) {
      v= board[r][c][1];
      if (v) { pf[v](); printf("m"); } else { printf(" ");}
      v= board[r][c][2];
-     if (v) { pf[v](); printf("L\t"); } else { printf(" \t");}
+     if (v) { pf[v](); printf("L  "); } else { printf("   ");}
   }
   printf("\n");
 }
