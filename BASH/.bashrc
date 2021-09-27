@@ -5,6 +5,8 @@ alias dot='. ~/.bashrc'
 alias vi='vim'
 alias ec2='ssh -i "~/vivek-key.pem" ec2-user@ec2-3-139-93-220.us-east-2.compute.amazonaws.com'
 alias shep='ssh -i ~/sheperd.pem centos@ec2-3-138-69-149.us-east-2.compute.amazonaws.com'
+alias ls='ls -GA'
+alias ll='ls -lGA'
 function wssh
 {
   cp ~/.ssh/known_hosts ~/.ssh/kh
