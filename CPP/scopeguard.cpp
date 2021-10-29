@@ -1,15 +1,19 @@
 #include <stdlib.h>
 #include <stdio.h>
-//#include "scope_guard.h"
+#include <iostream>
+#include <fcntl.h>
+#include <unistd.h>
 #include <functional>
 
 class ScopeGuard {
  public:
   explicit ScopeGuard(std::function<void()> fn) : fn_(fn) {}
   ~ScopeGuard() {
-    if (!dismissed_) fn_();
+    //if (!dismissed_)
+      fn_();
   }
-
+#if 0
+  //junk code
   ScopeGuard &operator=(const ScopeGuard &) = delete;
   ScopeGuard &operator=(ScopeGuard &&) = delete;
 
@@ -21,10 +25,11 @@ class ScopeGuard {
       fn_();
     }
   }
+#endif
 
  private:
   std::function<void()> fn_;
-  bool dismissed_ = false;
+  //bool dismissed_ = false;
 };
 
 int main(int argc, char *argv[]) {
