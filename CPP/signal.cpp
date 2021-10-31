@@ -3,6 +3,7 @@
 #include <setjmp.h>
 #include <signal.h>
 #include <execinfo.h>
+#include <unistd.h>
 
 static sigjmp_buf mark;
 
@@ -12,6 +13,8 @@ void handler(int signum) {
   int size, i;
 
   size = backtrace (array, 10);
+  //backtrace_symbols_fd(array, size, STDOUT_FILENO);
+  //or do it with following code.
   strings = backtrace_symbols (array, size);
   if (strings != NULL)
   {
