@@ -35,3 +35,4 @@ printf "\033[0;96m"
 function yellow() {
 printf "\033[0;93m"
 }
+PS1="${blue}\h:\W \u\$ ${black}"
