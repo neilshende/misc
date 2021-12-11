@@ -17,9 +17,9 @@ std::string cmd = std::string("tail -n 10 ") + log_file_ +
    " | grep -e 'Pid.*do not match expected' -e 'Unable to create a thread' >/dev/null 2>&1";
 
 if (std::system(cmd.c_str())) {
-   std::cout << "system return non zero\n";
+   std::cout << "Not found\n";
 } else {
-   std::cout << "system return zero\n";
+   std::cout << "Found\n";
 }
 return 0;
 }
