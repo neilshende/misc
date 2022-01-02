@@ -77,5 +77,5 @@ amortize <- function(p_input = 25000, i_input = 7, n_years = 30,
       stringsAsFactors = FALSE)
   )
   
-  out
+  return(out)
 }
