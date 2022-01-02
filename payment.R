@@ -13,13 +13,13 @@ principal_balance = function (monthly_payment, rate, years) {
   return (mp *(t -1) /(t * R))
 }
 
-refi = function(curr_balance=0, curr_payment=0, curr_rate, curr_num_payments, new_rate, closing_cost,
+refi = function(curr_balance=0, curr_payment=0, curr_rate, num_payments_remaining, new_rate, closing_cost,
                 add_closing_cost_to_loan=TRUE) {
    if (curr_balance == 0) {
-      curr_balance = principal_balance(curr_payment, curr_rate, curr_num_payments/12)
+      curr_balance = principal_balance(curr_payment, curr_rate, num_payments_remaining/12)
    }
    if (curr_payment == 0) {
-      curr_payment = monthly_payment(curr_balance, curr_rate, curr_num_payments/12)
+      curr_payment = monthly_payment(curr_balance, curr_rate, num_payments_remaining/12)
    }
    if (curr_balance == 0 || curr_payment == 0) {
      message("both curr_balance and curr_payment are 0\n")
@@ -33,7 +33,7 @@ refi = function(curr_balance=0, curr_payment=0, curr_rate, curr_num_payments, ne
    ret = vector("list", 4)
    names(ret) = c("new_principal", "new_payment", "monthly_savings", "months_to_break_even")
    ret$new_principal = new_balance
-   ret$new_payment = monthly_payment(new_balance, new_rate, curr_num_payments/12)
+   ret$new_payment = monthly_payment(new_balance, new_rate, num_payments_remaining/12)
    ret$monthly_savings = curr_payment - ret$new_payment
    if (!add_closing_cost_to_loan && ret$monthly_savings > 0) {
       ret$months_to_break_even = ceiling(closing_cost/ret$monthly_savings)
