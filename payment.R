@@ -5,7 +5,12 @@ payment = function(P, R, N) {
  t = (1 + R) ^ N
  return (P * R * t / (t - 1))
 }
-
+borrow = function (mp, R, N) {
+  R = R/1200
+  N = N*12
+  t = (1 + R) ^ N
+  return (mp *(t -1) /(t * R))
+}
 amortize <- function(p_input = 25000, i_input = 7, n_years = 30,
   output = "table", index = NULL) { 
 
