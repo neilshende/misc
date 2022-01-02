@@ -1,26 +1,31 @@
 # P = principal, R = interest rate/year,   N = number of years,  return = payment per month.
-payment = function(P, R, N) {
- R = R/1200
- N = N*12
+monthly_payment = function(principal, rate, years) {
+ P = principal
+ R = rate/1200
+ N = years*12
  t = (1 + R) ^ N
  return (P * R * t / (t - 1))
 }
-borrow = function (mp, R, N) {
-  R = R/1200
-  N = N*12
+principal_balance = function (monthly_payment, rate, years) {
+  R = rate/1200
+  N = years*12
+  mp = monthly_payment
   t = (1 + R) ^ N
   return (mp *(t -1) /(t * R))
 }
 
 refi = function(curr_balance=0, curr_payment=0, curr_rate, curr_num_payments, new_rate, closing_cost,
-                add_closing_cost=TRUE) {
+                add_closing_cost_to_loan=TRUE) {
 if (curr_balance == 0) {
-   curr_balance = borrow(curr_payment, curr_rate, curr_num_payments)
+   curr_balance = principal_balance(curr_payment, curr_rate, curr_num_payments/12)
 }
-if (curr_balance == 0) {
+if (curr_payment == 0) {
+   curr_payment = monthly_payment(curr_balance, curr_rate, curr_num_payments/12)
+}
+if (curr_balance == 0 || curr_payment == 0) {
   message("both curr_balance and curr_payment are 0\n")
 }
-if (add_closing_cost) {
+if (add_closing_cost_to_loan) {
    new_balance= curr_balance+closing_cost
 } else {
    new_balance= curr_balance
@@ -28,10 +33,10 @@ if (add_closing_cost) {
 
 ret = vector("list", 3)
 names(ret) = c("new_payment", "monthly_savings", "months_to_break_even")
-ret$new_payment = payment(new_balance, new_rate, curr_num_payments)
+ret$new_payment = monthly_payment(new_balance, new_rate, curr_num_payments/12)
 ret$monthly_savings = curr_payment - ret$new_payment
-if (!add_closing_cost && ret$monthly_savings > 0) {
-  ret$months_to_break_even = closing_cost/ret$monthly_savings
+if (!add_closing_cost_to_loan && ret$monthly_savings > 0) {
+  ret$months_to_break_even = ceiling(closing_cost/ret$monthly_savings)
 } else {
   ret$months_to_break_even = NA
 }
