@@ -11,6 +11,33 @@ borrow = function (mp, R, N) {
   t = (1 + R) ^ N
   return (mp *(t -1) /(t * R))
 }
+
+refi = function(curr_balance=0, curr_payment=0, curr_rate, curr_num_payments, new_rate, closing_cost,
+                add_closing_cost=TRUE) {
+if (curr_balance == 0) {
+   curr_balance = borrow(curr_payment, curr_rate, curr_num_payments)
+}
+if (curr_balance == 0) {
+  message("both curr_balance and curr_payment are 0\n")
+}
+if (add_closing_cost) {
+   new_balance= curr_balance+closing_cost
+} else {
+   new_balance= curr_balance
+}
+
+ret = vector("list", 3)
+names(ret) = c("new_payment", "monthly_savings", "months_to_break_even")
+ret$new_payment = payment(new_balance, new_rate, curr_num_payments)
+ret$monthly_savings = curr_payment - ret$new_payment
+if (!add_closing_cost && ret$monthly_savings > 0) {
+  ret$months_to_break_even = closing_cost/ret$monthly_savings
+} else {
+  ret$months_to_break_even = NA
+}
+return(ret)
+}
+
 amortize <- function(p_input = 25000, i_input = 7, n_years = 30,
   output = "table", index = NULL) { 
 
