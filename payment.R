@@ -30,8 +30,8 @@ refi = function(curr_balance=0, curr_payment=0, curr_rate, num_payments_remainin
      new_balance= curr_balance
    }
 
-   ret = vector("list", 4)
-   names(ret) = c("new_principal", "new_payment", "monthly_savings", "months_to_break_even")
+   ret = vector("list", 5)
+   names(ret) = c("new_principal", "new_payment", "monthly_savings", "total_savings", "months_to_break_even")
    ret$new_principal = new_balance
    ret$new_payment = monthly_payment(new_balance, new_rate, num_payments_remaining/12)
    ret$monthly_savings = curr_payment - ret$new_payment
@@ -39,6 +39,11 @@ refi = function(curr_balance=0, curr_payment=0, curr_rate, num_payments_remainin
       ret$months_to_break_even = ceiling(closing_cost/ret$monthly_savings)
    } else {
       ret$months_to_break_even = NA
+   }
+   if (add_closing_cost_to_loan) {
+      ret$total_savings = ret$monthly_savings * num_payments_remaining
+   } else {
+      ret$total_savings = ret$monthly_savings * num_payments_remaining - closing_cost
    }
    return(ret)
 }

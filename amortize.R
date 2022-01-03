@@ -3,7 +3,8 @@ payment  <- function(loan, apr, months) {
     loan * rate^months * (rate - 1) / (rate^months - 1)
 }
 
-amortize <- function(loan, payment, apr, months) {
+amortize <- function(loan, apr, months) {
+    payment = payment(loan, apr, months)
     rate <- 1 + apr / 100 / 12
     month <- 0:months
     balance <- loan * rate^month - payment * (rate^month - 1) / (rate - 1)
