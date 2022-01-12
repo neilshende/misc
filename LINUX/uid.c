@@ -19,6 +19,10 @@ if (pid == 0) {
    }
    exit(0);
 }
+else if (pid < 0) {
+  printf("fork failure\n");
+  return 1;
+}
 pid_t got_pid;
 int state;
 got_pid = waitpid(pid, &state, 0);
