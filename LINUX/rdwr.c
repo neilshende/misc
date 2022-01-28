@@ -61,6 +61,7 @@ int main(int argc, char *argv[]) {
    //sleep(10000);
    for (int i=0; i<n; i++) {
      cr = read(fdr, buf, sizeof(buf));
+     if (cr < 1 ) break; //eof or error
      if (cr != sizeof(buf)) {
        static int once=1;
        if (once) {
