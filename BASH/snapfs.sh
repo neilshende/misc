@@ -7,19 +7,23 @@ function dirslash()
    if [ -d $d ]; then if [[ ! $d =~ /$ ]]; then d=${d}/; fi; fi
    echo $d
 }
-function open_files_for_write()
+
+function list_open_files_for_write()
 {
-  local PID=$1
-  for f in /proc/${PID}/fd/* ;do
-    if [ -f $(readlink $f | awk '{print $1}') ]; then
-      local fb=$(basename $f)
-      local flag=$(cat /proc/${PID}/fdinfo/${fb} | awk '/flags:/{print $2}')
-      local wrrd=$((flag&2))
-          >&2 echo WRRD is $wrrd FLAG is $flag
-      if [[ $wrrd != 0 ]]; then
+  local -a PIDS=$(pstree $1 -Tpa | awk 'BEGIN {FS=","} {print $2}' | awk '{print $1}')
+  for PID in ${PIDS[@]} ; do
+    >&2 echo PID is $PID
+    for f in /proc/${PID}/fd/* ;do
+      if [ -f $(readlink $f | awk '{print $1}') ]; then
+        local fb=$(basename $f)
+        local flag=$(cat /proc/${PID}/fdinfo/${fb} | awk '/flags:/{print $2}')
+        local wrrd=$((flag&3))
+          >&2 echo  $(readlink $f) : WRRD is $wrrd FLAG is $flag
+        if [[ $wrrd != 0 ]]; then
           echo $(readlink $f)
+        fi
       fi
-    fi
+    done
   done
 }
 
@@ -35,9 +39,11 @@ case "$CRTOOLS_SCRIPT_ACTION" in
         save_list=("$@")
         declare -a olist
         declare -a olist_filt
-        olist=$(open_files_for_write $pid)
+        olist=$(list_open_files_for_write $pid)
+
+        o2list=$(for x in ${olist[@]} ; do echo $x; done | sort -u)
         olist_filt=$(
-          for o in "${olist[@]}" ; do
+          for o in ${o2list} ; do
              cont=0
              for sns in "${save_list[@]}" ; do
                 if [ -d $sns ]; then
