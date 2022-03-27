@@ -1,18 +1,23 @@
 #!/bin/bash
 POSTDUMP="post-dump"
 PRERESTORE="pre-restore"
-function dirslash()
+function dir_slash_ending()
 {
    local d=$1
    if [ -d $d ]; then if [[ ! $d =~ /$ ]]; then d=${d}/; fi; fi
    echo $d
 }
 
+function is_absolute()
+{
+   if [[ $1 =~ ^/ ]]; then true; else false; fi
+}
+
 function list_open_files_for_write()
 {
   local -a PIDS=$(set -o pipefail; pstree $1 -Tpa | awk 'BEGIN {FS=","} {print $2}' | awk '{print $1}')
   if [ $? != 0 ];then
-     >&2 echo $MY_NAME Failed read pstree of $1 .
+     >&2 echo $MY_NAME $(date): Failed read pstree of $1
      exit 1
   fi
   for PID in ${PIDS[@]} ; do
@@ -20,18 +25,18 @@ function list_open_files_for_write()
     for f in /proc/${PID}/fd/* ;do
       local openfile=$(set -o pipefail; readlink $f | awk '{print $1}')
       if [ $? != 0 ];then
-         >&2 echo $MY_NAME Failed read open file of $1 .
+         >&2 echo $MY_NAME $(date): Failed read open file of $1 .
          exit 1
       fi
       if [ -f $(openfile) ]; then
         local fb=$(basename $f)
         local flag=$(set -o pipefail; cat /proc/${PID}/fdinfo/${fb} | awk '/flags:/{print $2}')
         if [ $? != 0 ];then
-          >&2 echo $MY_NAME Failed read fdinfo of ${PID} .
+          >&2 echo $MY_NAME $(date): Failed read fdinfo of ${PID} .
           exit 1
         fi
         local wrrd=$((flag&3))
-          >&2 echo  $(readlink $f) : WRRD is $wrrd FLAG is $flag
+          >&2 echo  $MY_NAME $(date): DEBUG $(readlink $f) : WRRD is $wrrd FLAG is $flag
         if [[ $wrrd != 0 ]]; then
           echo $(readlink $f)
         fi
@@ -59,17 +64,22 @@ case "$CRTOOLS_SCRIPT_ACTION" in
           for o in ${o2list} ; do
              cont=0
              for sns in "${save_list[@]}" ; do
+                if ! is_absolute $sns
+                then
+                   echo "$MY_NAME $(date): ERROR! [$sns] is not absolute path."
+                   exit 1
+                fi
                 if [ -d $sns ]; then
-                   ss=$(dirslash ${sns})
+                   ss=$(dir_slash_ending ${sns})
                    if [[ $o =~ $ss ]]; then
                       cont=1
-                      >&2 echo $o removed found parent dir $ss
+                      >&2 echo $MY_NAME $(date): DEBUG $o removed found parent dir $ss
                       break
                    fi
                 elif [ -f $sns ]; then
                   if [[ "$sns" == "$o" ]]; then
                      cont=1
-                     >&2 echo $o removed found matching file $sns
+                     >&2 echo $MY_NAME $(date): DEBUG $o removed found matching file $sns
                      break
                   fi
                 fi
@@ -85,8 +95,12 @@ case "$CRTOOLS_SCRIPT_ACTION" in
            echo $elem
         done | sort -u
         )
-        echo DONE ${uniq_list[@]}
-        echo OLIST_FILT ${olist_filt[@]}
+        if echo tar -cf ./appdir/backup.tar ${uniq_list[@]}
+        then
+          echo "$MY_NAME $(date): tar failed."
+          exit 1
+        fi
+        
 esac
 exit 0
 
