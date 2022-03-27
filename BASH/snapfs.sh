@@ -28,7 +28,7 @@ function list_open_files_for_write()
          >&2 echo $MY_NAME $(date): Failed read open file of $1 .
          exit 1
       fi
-      if [ -f $(openfile) ]; then
+      if [ -f ${openfile} ]; then
         local fb=$(basename $f)
         local flag=$(set -o pipefail; cat /proc/${PID}/fdinfo/${fb} | awk '/flags:/{print $2}')
         if [ $? != 0 ];then
@@ -38,7 +38,7 @@ function list_open_files_for_write()
         local wrrd=$((flag&3))
           >&2 echo  $MY_NAME $(date): DEBUG $(readlink $f) : WRRD is $wrrd FLAG is $flag
         if [[ $wrrd != 0 ]]; then
-          echo $(readlink $f)
+          echo ${openfile}
         fi
       fi
     done
@@ -95,12 +95,10 @@ case "$CRTOOLS_SCRIPT_ACTION" in
            echo $elem
         done | sort -u
         )
-        if echo tar -cf ./appdir/backup.tar ${uniq_list[@]}
+        if ! echo tar -cf ./appdir/backup.tar ${uniq_list[@]}
         then
           echo "$MY_NAME $(date): tar failed."
           exit 1
         fi
-        
 esac
 exit 0
-
