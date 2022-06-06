@@ -29,6 +29,37 @@ int smallest(node *n)
    return (smallest(n->left));
 }
 
+int largest(node *n)
+{
+   //assert(n != NULL)
+   if (n->right == NULL) return n->data;
+   return (largest(n->right));
+}
+
+node *find(int data, node *head)
+{
+   if (head == NULL) return NULL;
+   if (head->data == data) return head;
+   if (head->data > data) return find(data, head->left);
+   else return find(data, head->right);
+}
+
+int successor(int data, node *head)
+{
+   node * t = find(data, head);
+   if (t == NULL) return -911;
+   if (t->right == NULL) return -911;
+   return smallest(t->right);
+}
+
+int predessor(int data, node *head)
+{
+   node * t = find(data, head);
+   if (t == NULL) return -911;
+   if (t->left == NULL) return -911;
+   return largest(t->left);
+}
+
 // A utility function to create a node
 node* newNode(int data)
 {
@@ -116,7 +147,10 @@ int main()
  
     cout << "Inorder traversal of the constructed tree: \n";
     printInorder(root);
- 
+
+    cout << "pred of 10 " << predessor(10, root) << "\n";
+    cout << "succ of 10 " << successor(10, root) << "\n";
+
     return 0;
 }
 
