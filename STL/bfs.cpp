@@ -30,6 +30,19 @@ int shallowest_node(node *head)
     dr = shallowest_node(head->right);
     return (min(dl, dr)+1);
 }
+void DFS(node *head)
+{
+  std::stack<node *> s;
+  s.push(head);
+  while (!s.empty()) {
+      node *x=s.top();
+      s.pop();
+      std::cout << x->value << "  " ;
+      if (x->left) s.push(x->left);
+      if (x->right) s.push(x->right);
+  }
+  std::cout << '\n';
+}
 void BFS(node *head)
 {
   std::deque<node *> q;
@@ -71,18 +84,11 @@ int main ()
   head->right->left->value=6;
   head->right->right->value=7;
 
+  std::cout << "BFS listing:\n";
   BFS(head);
 
-  std::stack<node *> s;
-  s.push(head);
-  while (!s.empty()) {
-      node *x=s.top();
-      s.pop();
-      std::cout << x->value << "  " ;
-      if (x->left) s.push(x->left);
-      if (x->right) s.push(x->right);
-  }
-  std::cout << '\n';
+  std::cout << "DFS listing:\n";
+  DFS(head);
 
   return 0;
 }
