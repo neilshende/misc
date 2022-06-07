@@ -20,5 +20,9 @@ int main () {
 
   std::for_each(foo.begin(), foo.end(), functor);
 
+  std::cout << "\nOld way\n";
+  for (auto it=foo.begin(); it != foo.end(); it++) std::cout << " " << *it;
+  std::cout << "\n";
+
   return 0;
 }
