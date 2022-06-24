@@ -28,20 +28,23 @@ int isset(unsigned int x, unsigned int bit)
    return x;
 }
 
-void setbit(unsigned int *x, unsigned int bit, int val)
+void setbit(unsigned int *x, unsigned int bit)
 {
-   unsigned int y = 1<<bit;
    if (bit > 31) return;
-   if (val) {
-      *x |= y;
-   } else {
-      *x &= ~y;
-   }
+   *x |= 1 << bit;
 }
+
+void resetbit(unsigned int *x, unsigned int bit)
+{
+   if (bit > 31) return;
+   *x &= ~(1 << bit);
+}
+
 int ispoweroftwo(unsigned int x)
 {
    return ((x&(x-1)) == 0);
 }
+
 int isnetmask(unsigned int x)
 {
    if (x==0 || x==0xffffFFFF) return 0;
@@ -53,8 +56,8 @@ int isnetmask(unsigned int x)
 int main()
 {
 unsigned int x = 0xffffFFFF;
-setbit(&x, 15, 0);
-setbit(&x, 0, 0);
+setbit(&x, 15);
+resetbit(&x, 0);
 printf("number is %x, bit count is %d, pow of two %d. 14 %d, 15 %d.\n", x, countbits(x), ispoweroftwo(x), isset(x, 14), isset(x, 15));
 printf("netmask %d, netmask 0xff000000 %d.\n", isnetmask(x), isnetmask(0xff000000));
 endian();
