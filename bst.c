@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <memory.h>
 #include <string.h>
+#include <iostream>
+using namespace std;
+
 int stack[1000];
 
 int *sp = stack;
@@ -47,7 +50,7 @@ int bint[15] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
 node *bal_insert(int *a, int start, int end)
 {
    if (start>end) return NULL;
-   node *n= malloc(sizeof(node));
+   node *n= (node *)malloc(sizeof(node));
    int mid = (start+end)/2;
    n->value=a[mid];
 //   n->left = n->right = NULL;
@@ -56,6 +59,23 @@ node *bal_insert(int *a, int start, int end)
    return n;
 }
 
+int least(struct node* head)
+{
+   if (head->left == NULL) return head->value;
+   return (least(head->left));
+}
+
+//inorder print
+void printInorder(struct node* node)
+{
+    if (node == NULL)
+        return;
+    printInorder(node->left);
+    cout <<"  "<< node->value;
+    printInorder(node->right);
+}
+
+//Lowest Common Ancestor
 node * LCA(node *head, node *a, node *b)
 {
     if (head == NULL) return NULL;
@@ -182,7 +202,6 @@ void printbst(node *head, ORDER o)
        break;
 
     case POSTORDER:
-    
        printbst(head->left, o);
        printbst(head->right, o);
        printf("%d\n", head->value);
@@ -205,7 +224,7 @@ int main(void)
    node *a, *b, *c;
    int i;
    for(i=10; i>0; i--) {
-      node *newnode = malloc(sizeof(node));
+      node *newnode = (node *)malloc(sizeof(node));
       newnode->value= i;
       newnode->left = newnode->right = NULL;
       head = insert(head, newnode);
@@ -224,7 +243,7 @@ int main(void)
    printf("Lowest Common Ancestor in BST. LCA->val = %d\n", c->value);
 
    for (i=100; i>80; i--) {
-      node *newnode = malloc(sizeof(node));
+      node *newnode = (node *)malloc(sizeof(node));
       newnode->value= i;
       newnode->left = newnode->right = NULL;
       subhead = insert(subhead, newnode);
@@ -240,7 +259,7 @@ int main(void)
    a = find(head, 95);
    printf("Find 95 %p.\n", a);
    printf("adding duplicate node.\n");
-   b = malloc(sizeof(node));
+   b = (node *)malloc(sizeof(node));
    b->value = 95;
    b->left = b->right = NULL;
    head = insert(head, b);
@@ -257,5 +276,9 @@ int main(void)
    printf("\n");
    }
 
+   cout << "print inOrder\n";
+   printInorder(head);
+
+   cout << "Least is " << least(head) << endl;
    return 0;
 }
