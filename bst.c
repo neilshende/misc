@@ -25,6 +25,33 @@ typedef struct node
    int value;
 } node;
 node *merge(node *head, node *subhead);
+
+bool isHeap(node *head)
+{
+   if (head == NULL) return true;
+   if (head->left == NULL && head->right == NULL) return true;
+   if (head->left && head->right) return head->value < head->right->value
+                                         && head->value < head->left->value
+                                         && isHeap(head->right)
+                                         && isHeap(head->left);
+   if (head->left == NULL) return (head->value < head->right->value) && isHeap(head->right);
+   if (head->right == NULL) return (head->value < head->left->value) && isHeap(head->left);
+   // can't reach here
+   return false;
+}
+bool isBST(node *head)
+{
+   if (head == NULL) return true;
+   if (head->left == NULL && head->right == NULL) return true;
+   if (head->left && head->right) return head->value < head->right->value
+                                         && head->value > head->left->value
+                                         && isBST(head->right)
+                                         && isBST(head->left);
+   if (head->left == NULL) return (head->value < head->right->value) && isBST(head->right);
+   if (head->right == NULL) return (head->value > head->left->value) && isBST(head->left);
+   // can't reach here
+   return false;
+}
 int depth(node *head) 
 {
 //depth of tree. == depth of deepest node.
@@ -276,9 +303,10 @@ int main(void)
    printf("\n");
    }
 
-   cout << "print inOrder\n";
+   cout << "\nprint inOrder\n";
    printInorder(head);
 
-   cout << "Least is " << least(head) << endl;
+   cout << "\nLeast is " << least(head) << endl;
+   cout << "isBST is " << (isBST(head) ? "true" : "false") << endl;
    return 0;
 }
