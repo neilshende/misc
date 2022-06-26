@@ -78,6 +78,22 @@ bool isAVL(node *head)
   return (depth(head->left)-depth(head->right) <= 1);
 }
 
+int size(node *node)
+{
+   if (node==NULL) return 0;
+   int r = size(node->right);
+   int l = size(node->left);
+   return r+l+1;
+}
+
+int balance(node *node)
+{
+   if (node==NULL) return 0;
+   int r = size(node->right);
+   int l = size(node->left);
+   return r-l;
+}
+
 int bint[15] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
 
 node *bal_insert(int *a, int start, int end)
