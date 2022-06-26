@@ -194,6 +194,24 @@ node * find(node * head, int value)
        return find(head->right, value);
    }
 }
+node *insert(node *head, int value)
+{
+   if (head == NULL) {
+      node * n= (node *)malloc(sizeof(node));
+      n->value = value;
+      n->left = n->right = NULL;
+      return n;
+   }
+   if (head->value == value) {
+       return head;
+   }
+   if (head->value > value) {
+      head->left=insert(head->left, value);
+   } else {
+      head->right=insert(head->right, value);
+   }
+   return head;
+}
 node *insert(node *head, node *newnode)
 {
    if (head == NULL) return newnode;
