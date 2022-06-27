@@ -99,7 +99,8 @@ int bint[15] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
 node *bal_insert(int *a, int start, int end)
 {
    if (start>end) return NULL;
-   node *n= (node *)malloc(sizeof(node));
+   //node *n= (node *)malloc(sizeof(node));
+   node *n= new(node);
    int mid = (start+end)/2;
    n->value=a[mid];
 //   n->left = n->right = NULL;
@@ -110,8 +111,19 @@ node *bal_insert(int *a, int start, int end)
 
 int least(struct node* head)
 {
+   //head can't be NULL
    if (head->left == NULL) return head->value;
    return (least(head->left));
+}
+
+int least_nr(struct node *head)
+{
+   //head can't be NULL
+   node *p = head;
+   while (p->left) {
+     p = p ->left;
+   }
+   return p->value;
 }
 
 //inorder print
@@ -346,7 +358,7 @@ int main(void)
    cout << "\nprint inOrder\n";
    printInorder(head);
 
-   cout << "\nLeast is " << least(head) << endl;
+   cout << "\nLeast is " << least(head) << " using nr " << least_nr(head) << endl;
    cout << "isBST is " << (isBST(head) ? "true" : "false") << endl;
    cout << "isAVL is " << (isAVL(head) ? "true" : "false") << endl;
    return 0;
