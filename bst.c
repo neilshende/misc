@@ -115,12 +115,33 @@ struct node * maxnode(struct node *head)
    return maxnode(head->right);
 }
 
+//parent
+node * parent(node *head, node *a)
+{
+   if (head == NULL || a == NULL) return NULL;
+   if (head->right == a || head->left == a) return head;
+   if (head->value > a->value) return parent(head->left, a);
+   if (head->value < a->value) return parent(head->right, a);
+   return NULL;
+}
+
 struct node * pred(struct node *head, struct node *curr)
 {
    if (head == NULL || curr == NULL)  return NULL;
    if (curr->left == NULL) {
-      //if (/*curr is right child ) if (curr != head && curr parent != head*/) return curr->parent->parent;
-      //etc.
+      node *p = parent(head, curr);
+      if (p == NULL) return NULL;
+      if (p->value < curr->value) return p;
+      if (p->value > curr->value) {
+         node *pp = parent(head, p);
+         if (pp == NULL) return NULL;
+         if (pp->value < curr->value) return pp;
+         while (maxnode(pp->left)->value > curr->value) {
+           pp = pp->left;
+           if (pp == NULL) return NULL;
+         }
+         return pp;
+      }
    } else {
      return maxnode(curr->left);
    }
