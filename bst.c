@@ -109,6 +109,24 @@ node *bal_insert(int *a, int start, int end)
    return n;
 }
 
+struct node * maxnode(struct node *head)
+{
+   if (head->right == NULL) return head;
+   return maxnode(head->right);
+}
+
+struct node * pred(struct node *head, struct node *curr)
+{
+   if (head == NULL || curr == NULL)  return NULL;
+   if (curr->left == NULL) {
+      //if (/*curr is right child ) if (curr != head && curr parent != head*/) return curr->parent->parent;
+      //etc.
+   } else {
+     return maxnode(curr->left);
+   }
+   return NULL;
+}
+
 int least(struct node* head)
 {
    //head can't be NULL
