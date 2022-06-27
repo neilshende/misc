@@ -3,6 +3,7 @@
 #include <memory.h>
 #include <string.h>
 #include <iostream>
+#include <vector>
 using namespace std;
 
 int stack[1000];
@@ -125,8 +126,28 @@ node * parent(node *head, node *a)
    return NULL;
 }
 
-struct node * pred(struct node *head, struct node *curr)
+//inorder print
+
+void printInorder(struct node* node)
 {
+    if (node == NULL)
+        return;
+    printInorder(node->left);
+    cout << node->value << " ";
+    printInorder(node->right);
+}
+void vectorizeInorder(struct node* node, std::vector<struct node *> &v)
+{
+    if (node == NULL)
+        return;
+    vectorizeInorder(node->left, v);
+    v.push_back(node);
+    vectorizeInorder(node->right, v);
+}
+node * pred(struct node *head, struct node *curr)
+{
+//easier to just find inorder element before curr.
+#if 0
    if (head == NULL || curr == NULL)  return NULL;
    if (curr->left == NULL) {
       node *p = parent(head, curr);
@@ -146,6 +167,21 @@ struct node * pred(struct node *head, struct node *curr)
      return maxnode(curr->left);
    }
    return NULL;
+#endif
+std::vector<struct node *> v;
+vectorizeInorder(head, v);
+cout << "\nvectorized : " ;
+for (auto it=v.begin(); it<v.end(); it++) {
+   cout << (*it)->value << " ";
+}
+cout << endl;
+for (auto it=v.begin(); it<v.end(); it++) {
+  if (*it == curr) {
+     if (it == v.begin()) return NULL;
+     return *(--it);
+  }
+}
+return NULL;
 }
 
 int least(struct node* head)
@@ -163,16 +199,6 @@ int least_nr(struct node *head)
      p = p ->left;
    }
    return p->value;
-}
-
-//inorder print
-void printInorder(struct node* node)
-{
-    if (node == NULL)
-        return;
-    printInorder(node->left);
-    cout <<"  "<< node->value;
-    printInorder(node->right);
 }
 
 //Lowest Common Ancestor
@@ -400,5 +426,14 @@ int main(void)
    cout << "\nLeast is " << least(head) << " using nr " << least_nr(head) << endl;
    cout << "isBST is " << (isBST(head) ? "true" : "false") << endl;
    cout << "isAVL is " << (isAVL(head) ? "true" : "false") << endl;
+   c = find(head, 1);
+   if (c) cout << "expecting 1 " << c->value << endl;
+   c = find(head, 81);
+   if (c) cout << "expecting 81 " << c->value << endl;
+   node * p = pred(head, find(head, 1));
+   if (p == NULL) cout << "no pred for 1\n";
+
+   p = pred(head, find(head, 81));
+   cout << "pred of 81 is " << p->value << endl;
    return 0;
 }
