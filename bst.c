@@ -53,7 +53,7 @@ bool isBST(node *head)
    // can't reach here
    return false;
 }
-int depth(node *head) 
+int depth(node *head)
 {
 //depth of tree. == depth of deepest node.
    if (head==NULL) return 0;
@@ -146,43 +146,60 @@ void vectorizeInorder(struct node* node, std::vector<struct node *> &v)
 }
 node * pred(struct node *head, struct node *curr)
 {
-//easier to just find inorder element before curr.
-#if 0
-   if (head == NULL || curr == NULL)  return NULL;
-   if (curr->left == NULL) {
-      node *p = parent(head, curr);
-      if (p == NULL) return NULL;
-      if (p->value < curr->value) return p;
-      if (p->value > curr->value) {
-         node *pp = parent(head, p);
-         if (pp == NULL) return NULL;
-         if (pp->value < curr->value) return pp;
-         while (maxnode(pp->left)->value > curr->value) {
-           pp = pp->left;
-           if (pp == NULL) return NULL;
-         }
-         return pp;
+   std::vector<struct node *> v;
+   vectorizeInorder(head, v);
+   for (auto it=v.begin(); it<v.end(); it++) {
+      if (*it == curr) {
+         if (it == v.begin()) return NULL;
+         return *(--it);
       }
-   } else {
-     return maxnode(curr->left);
    }
    return NULL;
-#endif
-std::vector<struct node *> v;
-vectorizeInorder(head, v);
-cout << "\nvectorized : " ;
-for (auto it=v.begin(); it<v.end(); it++) {
-   cout << (*it)->value << " ";
 }
-cout << endl;
-for (auto it=v.begin(); it<v.end(); it++) {
-  if (*it == curr) {
-     if (it == v.begin()) return NULL;
-     return *(--it);
-  }
+
+// This function finds predecessor and successor of key in BST.
+// It sets pre and suc as predecessor and successor respectively
+void findPreSuc(node * root, node *& pre, node *& suc, int value)
+{
+   // Base case
+   if (root == NULL) return ;
+
+   // If key is present at root
+   if (root->value == value)
+   {
+      // the maximum value in left subtree is predecessor
+      if (root->left != NULL)
+      {
+         node * tmp = root->left;
+         while (tmp->right)
+            tmp = tmp->right;
+         pre = tmp ;
+      }
+
+      // the minimum value in right subtree is successor
+      if (root->right != NULL)
+      {
+         node * tmp = root->right ;
+         while (tmp->left)
+            tmp = tmp->left ;
+         suc = tmp ;
+      }
+      return ;
+   }
+
+   // If key is smaller than root's key, go to left subtree
+   if (root->value > value)
+   {
+      suc = root ;
+      findPreSuc(root->left, pre, suc, value) ;
+   }
+   else // go to right subtree
+   {
+      pre = root ;
+      findPreSuc(root->right, pre, suc, value) ;
+   }
 }
-return NULL;
-}
+
 
 int least(struct node* head)
 {
@@ -260,7 +277,7 @@ node *findu(node *head, int value)
    if (nl!=NULL) return nl;
    return findu(head->right, value);
 }
-       
+
 node * find(node * head, int value)
 {
    if (head == NULL) return NULL;
@@ -352,7 +369,7 @@ void printbst(node *head, ORDER o)
        break;
     }
 }
-int path(node *head, int val) 
+int path(node *head, int val)
 {
    if (head ==  NULL) {push(sp, 0); return 0;}
    push(sp, head->value);
