@@ -4,6 +4,8 @@
 #include <string.h>
 #include <iostream>
 #include <vector>
+#include <unordered_set>
+
 using namespace std;
 
 int stack[1000];
@@ -415,6 +417,29 @@ int path(node *head, int val)
    if (path(head->right, val)) { return 1; } else { (void)pop(sp); }
    return 0;
 }
+
+// unordered_set<int> set;
+// if (!findpair(head, sum, set)) cout << "not found\n";
+bool findpair(node* root, int sum,
+                  unordered_set<int>& set)
+{
+    if (root == NULL)
+        return false;
+
+    if (findpair(root->left, sum, set))
+        return true;
+
+    if (set.find(sum - root->value) != set.end()) {
+        cout << "Pair is found (" << sum - root->value
+             << ", " << root->value << ")" << endl;
+        return true;
+    }
+    else
+        set.insert(root->value);
+
+    return findpair(root->right, sum, set);
+}
+
 int main(void)
 {
    node *head = NULL;
@@ -489,5 +514,10 @@ int main(void)
 
    p = pred(head, find(head, 81));
    cout << "pred of 81 is " << p->value << endl;
+
+   unordered_set<int> set;
+   int sum = 189;
+   if (!findpair(head, sum, set)) cout << "not found\n";
+
    return 0;
 }
