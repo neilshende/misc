@@ -6,11 +6,12 @@
 
 using namespace std;
 
-#if 0
+#if 1
 // Generic function to swap two pairs
-void swap(pair<int, int>& a, pair<int, int>& b)
+template <class T>
+void swap(T& a, T& b)
 {
-   pair<int, int> temp = a;
+   T temp = a;
    a = b;
    b = temp;
 }
