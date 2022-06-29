@@ -2,9 +2,11 @@
 #include <iostream>
 #include <unordered_map>
 #include <vector>
+#include <algorithm>
 
 using namespace std;
 
+#if 0
 // Generic function to swap two pairs
 void swap(pair<int, int>& a, pair<int, int>& b)
 {
@@ -12,6 +14,7 @@ void swap(pair<int, int>& a, pair<int, int>& b)
    a = b;
    b = temp;
 }
+#endif
 
 // Returns the index of the parent node
 inline int parent(int i)
