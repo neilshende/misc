@@ -16,6 +16,7 @@
 #include <dirent.h>
 
 using namespace std;
+const int DUMP_SLEEP_SEC = 2;
 
 // Data Structures needed:
 
@@ -82,7 +83,7 @@ static void *container_dumper(void *args) {
       mtx.unlock();
 
       container_dumper_helper();
-      sleep(2); //TODO remove hard-coding
+      sleep(DUMP_SLEEP_SEC);
    }
    return NULL;
 }
@@ -153,15 +154,23 @@ static void *file_finder(void *args) {
       x->pattern = &(args_words[i]);
       thread_args.push_back(x);
       res = pthread_create(&tid, NULL, file_finder_helper, x);
-      if (res==0) tids.push_back(tid);
+      if (res == 0) {
+         tids.push_back(tid);
+      } else {
+         error("Failed to pthread_create.");
+         //TODO is this fatal? for now just go on.
+      }
    }
    pthread_t dumper_tid;
    scanning_complete = false;
    int res2 = pthread_create(&dumper_tid, NULL, container_dumper, NULL);
-   if (res2!=0) error("Unable to pthread_join.");
+   if (res2 != 0) error("Unable to pthread_join.");
    for (auto itr=tids.begin(); itr<tids.end(); itr++) {
       res = pthread_join(*itr, NULL);
-      if (res!=0) error("Unable to pthread_join.");
+      if (res != 0) {
+         error("Unable to pthread_join.");
+         //TODO is this fatal? for now just go on.
+      }
    }
    for (int i=0; i<thread_args.size(); i++) {
        delete thread_args[i]; //free each thread_data
@@ -170,8 +179,8 @@ static void *file_finder(void *args) {
    args_words.clear(); //clear the vector of command line arguments
    scanning = false;
    scanning_complete = true;
-   if (res2==0) res = pthread_join(dumper_tid, NULL);
-   if (res!=0) error("Unable to pthread_join.");
+   if (res2 == 0) res = pthread_join(dumper_tid, NULL);
+   if (res != 0) error("Unable to pthread_join.");
    container.clear(); //clean the container in case of shutdown
    return NULL;
 }
@@ -186,6 +195,10 @@ static void *file_finder(void *args) {
 // orchestrating thread takes care of cleanups.
 // For dump command, it reuses the helper function that dumps available data.
 int main(int argc, char *argv[]) {
+   if (argc < 3) {
+      error("Missing arguments.");
+      return 1;
+   }
    string line;
    args_words.clear();
    for (int i=0; i<argc; i++) {
@@ -193,6 +206,10 @@ int main(int argc, char *argv[]) {
    }
    scanning = true;
    int res = pthread_create(&finder_tid, NULL, file_finder, NULL);
+   if (res != 0) {
+      error("Fatal: Unable to pthread_create.");
+      return 1;
+   }
    while (!shutdown) {
       cout << "input command> ";
       getline(cin, line);
@@ -201,7 +218,7 @@ int main(int argc, char *argv[]) {
          shutdown = true;
          if (scanning || scanning_complete) {
             int res = pthread_join(finder_tid, NULL);
-            if (res!=0) error("Unable to pthread_join.");
+            if (res != 0) error("Unable to pthread_join.");
          }
          error("EOF");
          break;
@@ -220,7 +237,7 @@ int main(int argc, char *argv[]) {
          shutdown = true;
          if (scanning || scanning_complete) {
             int res = pthread_join(finder_tid, NULL);
-            if (res!=0) error("Unable to pthread_join.");
+            if (res != 0) error("Unable to pthread_join.");
          }
       } else {
          error("Invalid command");
