@@ -32,7 +32,8 @@ class singleton {
 private:
    static singleton *instance;
    static deque<string> container;
-   static mutex mtx;
+   static mutex mtx_i; //protect instance
+   static mutex mtx_c; //protect container
 protected:
    singleton() {} // don't allow new
 
@@ -45,49 +46,50 @@ public:
    void operator=(const singleton &) = delete; //don't allow assignment
 
    static singleton *get_instance() {
-      mtx.lock();
+      mtx_i.lock();
       if (instance == nullptr) {
          instance = new singleton;
       }
-      mtx.unlock();
+      mtx_i.unlock();
       return instance;
    }
 
    // return current accumulated size of the container.
    int container_size() {
-      mtx.lock();
+      mtx_c.lock();
       int s = container.size();
-      mtx.unlock();
+      mtx_c.unlock();
       return s;
    }
 
    //  dump all accumulated matching path names.
    void dump() {
-      mtx.lock();
+      mtx_c.lock();
       int count = container.size();
       for (int i=0; i<count; i++) {
          cout << container.front() << endl;
          container.pop_front();
       }
-      mtx.unlock();
+      mtx_c.unlock();
    }
 
    // push_back matching path
    void push_back(string match) {
-      mtx.lock();
+      mtx_c.lock();
       container.push_back(match);
-      mtx.unlock();
+      mtx_c.unlock();
    }
 
    // clear the container
    void container_clear() {
-      mtx.lock();
+      mtx_c.lock();
       container.clear();
-      mtx.unlock();
+      mtx_c.unlock();
    }
 };
 singleton* singleton::instance = nullptr;
-mutex singleton::mtx;
+mutex singleton::mtx_i;
+mutex singleton::mtx_c;
 deque<string> singleton::container;
 
 // Thread ID of the orchestrating thread,
@@ -142,7 +144,7 @@ public:
       }
   };
 
-   void join() {
+   void join_scanners() {
       for (auto itr=tids.begin(); itr<tids.end(); itr++) {
          int res = pthread_join(*itr, NULL);
          if (res != 0) {
@@ -248,7 +250,7 @@ static void *file_finder(void *args) {
    singleton *single = singleton::get_instance();
    sw.start();
 
-   sw.join();
+   sw.join_scanners();
    args_words.clear(); //clear the vector of command line arguments
    scanning = false;
    scanning_complete = true;
