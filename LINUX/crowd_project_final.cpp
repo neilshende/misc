@@ -20,13 +20,15 @@ const int DUMP_SLEEP_SEC = 2;
 
 // Data Structures needed:
 
-// copy of command line arguments, needed by the pthreads.
+// copy of command line arguments, needed by orchestrator thread.
 vector<string> args_words;
 
 // The state machine is implemented using following three flags:
 volatile bool shutdown = false;
 volatile bool scanning = false;
 volatile bool scanning_complete = false;
+
+// Classes
 
 class singleton {
 private:
@@ -167,6 +169,7 @@ public:
          delete thread_args[i]; //free each thread_data
       }
       thread_args.clear(); //clear the vector of thread_data
+      tids.clear(); // clear the vector of tids
   };
 
 };
