@@ -118,3 +118,5 @@ ui <- fluidPage(
         outputId = "text"),
       plotOutput(
         outputId = "plot"))))
+
+shinyApp(ui = ui, server = server)
