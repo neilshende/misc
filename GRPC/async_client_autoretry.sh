@@ -6,11 +6,11 @@ rpcs=(SayHello SayYello)
 rpcid=(0 1)
 pref=(h y)
 
-deadline_ms=1000
-wait_for_ready=false
+#deadline_ms=1000
+#wait_for_ready=false
 
-#deadline_ms=-1
-#wait_for_ready=true
+deadline_ms=-1
+wait_for_ready=true
 
 cat <<EOF
 #include <iostream>
@@ -69,7 +69,9 @@ EOF
 i=0
 for reply in ${replies[@]}; do
 cat <<EOF
+    ${requests[$i]} ${pref[$i]}_request;
     ${reply} ${pref[$i]}_reply;
+
 EOF
 ((i++))
 done
@@ -78,7 +80,7 @@ cat <<EOF
 
     // Context for the client. It could be used to convey extra information to
     // the server and/or tweak certain RPC behaviors.
-    ClientContext context;
+    ClientContext *context;
 
     // Storage for the status of the RPC upon completion.
     Status status;
@@ -102,10 +104,9 @@ cat <<EOF
 
 // This class implements async client for a service. The object created via this class
 // shall remain functional as long as the service is up. If the server goes down,
-// this class will autmatically reconnect to the new instance of the server. The inflight RPCs
-// will fail with Status::UNAVAILABLE (14). The deadline for each RPC will also ensure that
-// the RPC is failed fast with Status::DEADLINE_EXCEEDED (4) when RPC does not complete before
-// the deadline. Upper layer to deal with that.
+// this clsas will automatically reconnect. Any RPC that failed with UNAVIALABLE will be
+// automatically dispatched. The retried RPC will wait for server to be ready. It is therefore
+// necessay to keep the deadline large or not set the deadline for each RPC at all.
 class ${service}Client {
  public:
   explicit ${service}Client(std::shared_ptr<Channel> channel,
@@ -132,13 +133,22 @@ i=0
 for rpc in ${rpcs[@]}; do
 cat <<EOF
   // Assembles the client's payload and sends it to the server.
-  ${service}AsyncClientCall* ${rpc}(const ${requests[$i]} req) {
+  ${service}AsyncClientCall* ${rpc}(const ${requests[$i]} req,
+     ${service}AsyncClientCall *callp) {
     // Data we are sending to the server.
-    ${requests[i]} request(req);
+    //${requests[i]} request(req);
 
-    // Call object to store rpc data
-    ${service}AsyncClientCall* call = new ${service}AsyncClientCall;
-    call->rpcid = ${rpcid[$i]};
+    ${service}AsyncClientCall* call = NULL;
+    if (callp == NULL) {
+        // Call object to store rpc data
+        call = new ${service}AsyncClientCall;
+        call->rpcid = ${rpcid[$i]};
+        call->${pref[i]}_request = req;
+    } else {
+        call = callp;
+        delete call->context;
+    }
+    call->context = new ClientContext;
 
     if (deadline_ms_ > 0) {
        // Set deadline for this rpc.
@@ -149,17 +159,17 @@ cat <<EOF
        // will error out with DEADLINE_EXCEEDED (4).
        auto deadline = std::chrono::system_clock::now() +
        std::chrono::milliseconds(deadline_ms_);
-       call->context.set_deadline(deadline);
+       call->context->set_deadline(deadline);
     }
 
-    call->context.set_wait_for_ready(wait_for_ready_);
+    call->context->set_wait_for_ready(wait_for_ready_);
 
     // stub_->PrepareAsync${rpc}() creates an RPC object, returning
     // an instance to store in "call" but does not actually start the RPC
     // Because we are using the asynchronous API, we need to hold on to
     // the "call" instance in order to get updates on the ongoing RPC.
     call->${pref[$i]}_response_reader =
-        stub_->PrepareAsync${rpc}(&call->context, request, &cq_);
+        stub_->PrepareAsync${rpc}(call->context, call->${pref[i]}_request, &cq_);
 
     // StartCall initiates the RPC call
     call->${pref[$i]}_response_reader->StartCall();
@@ -192,7 +202,22 @@ cat <<EOF
       // corresponds solely to the request for updates introduced by Finish().
       GPR_ASSERT(ok);
 
-      call->sem.release();
+      if (!call->status.ok() && call->status.error_code()==14) {
+
+EOF
+
+i=0
+for rpc in ${rpcs[@]}; do
+cat <<EOF
+         if (call->rpcid == ${rpcid[i]}) ${rpcs[$i]}(call->${pref[i]}_request, call);
+EOF
+((i++))
+done
+
+cat <<EOF
+      } else {
+         call->sem.release();
+      }
       if (shutdown_) break;
     }
   }
