@@ -7,6 +7,10 @@ rpcid=(0 1)
 pref=(h y)
 
 deadline_ms=1000
+wait_for_ready=false
+
+#deadline_ms=-1
+#wait_for_ready=true
 
 cat <<EOF
 #include <iostream>
@@ -101,10 +105,13 @@ cat <<EOF
 // the object and re-create it with server's new address.
 class ${service}Client {
  public:
-  explicit ${service}Client(std::shared_ptr<Channel> channel, int deadline_ms=${deadline_ms})
+  explicit ${service}Client(std::shared_ptr<Channel> channel,
+      int deadline_ms = ${deadline_ms},
+      bool wait_for_ready) = ${wait_for_ready}
       : stub_(${service}::NewStub(channel)) {
   shutdown_ = false;
   deadline_ms_ = deadline_ms;
+  wait_for_ready_ = wait_for_ready;
   // Spawn reader thread that loops indefinitely
   thread_ = std::thread(&${service}Client::AsyncCompleteRpc, this);
 
@@ -130,15 +137,19 @@ cat <<EOF
     ${service}AsyncClientCall* call = new ${service}AsyncClientCall;
     call->rpcid = ${rpcid[$i]};
 
-    // Set deadline for this rpc.
-    // default deadline for GRPC is very large -- if the server is up
-    // it's almost an eternity.
-    // If the server is down, the rpc will fail quickly with UNAVAILABLE (14)
-    // If the server does not respond before the deadline, the client
-    // will error out with DEADLINE_EXCEEDED (4).
-    auto deadline = std::chrono::system_clock::now() +
-    std::chrono::milliseconds(deadline_ms_);
-    call->context.set_deadline(deadline);
+    if (deadline_ms_ > 0) {
+       // Set deadline for this rpc.
+       // default deadline for GRPC is very large -- if the server is up
+       // it's almost an eternity.
+       // If the server is down, the rpc will fail quickly with UNAVAILABLE (14)
+       // If the server does not respond before the deadline, the client
+       // will error out with DEADLINE_EXCEEDED (4).
+       auto deadline = std::chrono::system_clock::now() +
+       std::chrono::milliseconds(deadline_ms_);
+       call->context.set_deadline(deadline);
+    }
+
+    call->context.set_wait_for_ready(wait_for_ready_);
 
     // stub_->PrepareAsync${rpc}() creates an RPC object, returning
     // an instance to store in "call" but does not actually start the RPC
@@ -194,6 +205,8 @@ cat <<EOF
   std::thread thread_;
   bool shutdown_;
   int deadline_ms_;
+  bool wait_for_ready_;
+  
 };
 
 int main(int argc, char** argv) {
@@ -203,9 +216,11 @@ int main(int argc, char** argv) {
   // the argument "--target=" which is the only expected argument.
   std::string target_str = absl::GetFlag(FLAGS_target);
   // We indicate that the channel isn't authenticated (use of
-  // InsecureChannelCredentials()).
+  // InsecureChannelCredentials())
   ${service}Client *greeter = new ${service}Client(
-      grpc::CreateChannel(target_str, grpc::InsecureChannelCredentials()));
+      grpc::CreateChannel(target_str, grpc::InsecureChannelCredentials()),
+      ${timeout_ms},
+      ${wait_for_ready});
 
   int N = 100;
   int i;
