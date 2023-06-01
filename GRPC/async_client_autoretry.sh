@@ -271,6 +271,7 @@ int main(int argc, char** argv) {
        std::cout <<  "calling hello " << i << "\n";
        req.set_name(user);
        call_contexts[i] = greeter->${rpcs[1]}(req);  // The RPC dispatch!
+       std::this_thread::sleep_for(std::chrono::milliseconds(200));
   }
   for (i = 0; i < N; i++) {
 #ifdef SEM_BUG
