@@ -10,6 +10,7 @@ deadline_ms=-1
 wait_for_ready="true"
 
 cat <<EOF
+#define SEM_BUG 1
 #include <iostream>
 #include <memory>
 #include <string>
@@ -57,8 +58,8 @@ cat <<EOF
   // struct for keeping state and data information
   class ${service}AsyncClientCall {
   public:
-     AsyncClientCall() {};
-     ~AsyncClientCall() { delete context; };
+     ${service}AsyncClientCall() {};
+     ~${service}AsyncClientCall() { delete context; };
 
     // identify which call was made
     int rpcid;
@@ -86,8 +87,11 @@ cat <<EOF
     Status status;
 
     // signal when done
-    std::counting_semaphore<1> sem{0};
-
+#ifdef SEM_BUG
+    std::mutex sem;
+#else
+    stdi::counting_semaphore<1> sem{0};
+#endif
    // Async responses readers 
 EOF
 
@@ -134,7 +138,7 @@ for rpc in ${rpcs[@]}; do
 cat <<EOF
   // Assembles the client's payload and sends it to the server.
   ${service}AsyncClientCall* ${rpc}(const ${requests[$i]} req,
-     ${service}AsyncClientCall *callp) {
+     ${service}AsyncClientCall *callp=NULL) {
     // Data we are sending to the server.
     //${requests[i]} request(req);
 
@@ -144,6 +148,9 @@ cat <<EOF
         call = new ${service}AsyncClientCall;
         call->rpcid = ${rpcid[$i]};
         call->${pref[i]}_request = req;
+#ifdef SEM_BUG
+        call->sem.lock();
+#endif
     } else {
         call = callp;
         delete call->context;
@@ -216,7 +223,11 @@ done
 
 cat <<EOF
       } else {
+#ifdef SEM_BUG
+         call->sem.unlock();
+#else
          call->sem.release();
+#endif
       }
       if (shutdown_) break;
     }
@@ -262,7 +273,11 @@ int main(int argc, char** argv) {
        call_contexts[i] = greeter->${rpcs[1]}(req);  // The RPC dispatch!
   }
   for (i = 0; i < N; i++) {
+#ifdef SEM_BUG
+      call_contexts[i]->sem.lock();  //call complete
+#else
       call_contexts[i]->sem.acquire(); // call complete
+#endif
       if (call_contexts[i]->status.ok())
             std::cout << "${service} received: " << call_contexts[i]->${pref[1]}_reply.message() << std::endl;
       else
