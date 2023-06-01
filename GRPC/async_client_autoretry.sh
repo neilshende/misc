@@ -6,9 +6,6 @@ rpcs=(SayHello SayYello)
 rpcid=(0 1)
 pref=(h y)
 
-#deadline_ms=1000
-#wait_for_ready=false
-
 deadline_ms=-1
 wait_for_ready="true"
 
@@ -114,7 +111,7 @@ class ${service}Client {
  public:
   explicit ${service}Client(std::shared_ptr<Channel> channel,
       int deadline_ms = ${deadline_ms},
-      bool wait_for_ready) = ${wait_for_ready}
+      bool wait_for_ready = ${wait_for_ready})
       : stub_(${service}::NewStub(channel)) {
   shutdown_ = false;
   deadline_ms_ = deadline_ms;
@@ -205,7 +202,7 @@ cat <<EOF
       // corresponds solely to the request for updates introduced by Finish().
       GPR_ASSERT(ok);
 
-      if (!call->status.ok() && call->status.error_code()==14) {
+      if (wait_for_ready_ && !call->status.ok() && call->status.error_code()==14) {
 
 EOF
 
