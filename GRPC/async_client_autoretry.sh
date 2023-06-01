@@ -8,6 +8,7 @@ pref=(h y)
 
 deadline_ms=-1
 wait_for_ready="true"
+max_retry_count=3
 
 cat <<EOF
 #define SEM_BUG 1
@@ -58,8 +59,11 @@ cat <<EOF
   // struct for keeping state and data information
   class ${service}AsyncClientCall {
   public:
-     ${service}AsyncClientCall() {};
+     ${service}AsyncClientCall() {retry_count = 0;};
      ~${service}AsyncClientCall() { delete context; };
+
+    // how many retries so far?
+    int retry_count;
 
     // identify which call was made
     int rpcid;
@@ -115,11 +119,15 @@ class ${service}Client {
  public:
   explicit ${service}Client(std::shared_ptr<Channel> channel,
       int deadline_ms = ${deadline_ms},
-      bool wait_for_ready = ${wait_for_ready})
+      bool wait_for_ready = ${wait_for_ready},
+      int max_retry_count = ${max_retry_count})
       : stub_(${service}::NewStub(channel)) {
+
   shutdown_ = false;
   deadline_ms_ = deadline_ms;
   wait_for_ready_ = wait_for_ready;
+  max_retry_count_ = max_retry_count;
+
   // Spawn reader thread that loops indefinitely
   thread_ = std::thread(&${service}Client::AsyncCompleteRpc, this);
 
@@ -152,6 +160,9 @@ cat <<EOF
         call->sem.lock();
 #endif
     } else {
+        // This is a retry
+        callp->retry_count++;
+        std::cout << "retrying: " <<  callp->${pref[i]}_request.name()  <<" count " << callp->retry_count << std::endl;
         call = callp;
         delete call->context;
     }
@@ -209,7 +220,11 @@ cat <<EOF
       // corresponds solely to the request for updates introduced by Finish().
       GPR_ASSERT(ok);
 
-      if (wait_for_ready_ && !call->status.ok() && call->status.error_code()==14) {
+      if (!shutdown_
+          && wait_for_ready_
+          && !call->status.ok()
+          && call->status.error_code() == grpc::UNAVAILABLE
+          && call->retry_count < max_retry_count_) {
 
 EOF
 
@@ -245,7 +260,8 @@ cat <<EOF
   bool shutdown_;
   int deadline_ms_;
   bool wait_for_ready_;
-  
+  int max_retry_count_;
+
 };
 
 int main(int argc, char** argv) {
@@ -268,8 +284,8 @@ int main(int argc, char** argv) {
   for (i = 0; i < N; i++) {
     std::string user("world " + std::to_string(i));
        ${requests[1]} req;
-       std::cout <<  "calling hello " << i << "\n";
-       req.set_name(user);
+       std::cout <<  "calling ${rpcs[1]} " << i << "\n";
+       req.set_name(user); // FIXME for each RPC pack the request.
        call_contexts[i] = greeter->${rpcs[1]}(req);  // The RPC dispatch!
        std::this_thread::sleep_for(std::chrono::milliseconds(200));
   }
