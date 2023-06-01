@@ -7,7 +7,7 @@ rpcid=(0 1)
 pref=(h y)
 
 deadline_ms=1000
-wait_for_ready=false
+wait_for_ready="false"
 
 #deadline_ms=-1
 #wait_for_ready=true
@@ -222,7 +222,7 @@ int main(int argc, char** argv) {
   // InsecureChannelCredentials())
   ${service}Client *greeter = new ${service}Client(
       grpc::CreateChannel(target_str, grpc::InsecureChannelCredentials()),
-      ${timeout_ms},
+      ${deadline_ms},
       ${wait_for_ready});
 
   int N = 100;

@@ -10,7 +10,7 @@ pref=(h y)
 #wait_for_ready=false
 
 deadline_ms=-1
-wait_for_ready=true
+wait_for_ready="true"
 
 cat <<EOF
 #include <iostream>
@@ -250,7 +250,7 @@ int main(int argc, char** argv) {
   // InsecureChannelCredentials())
   ${service}Client *greeter = new ${service}Client(
       grpc::CreateChannel(target_str, grpc::InsecureChannelCredentials()),
-      ${timeout_ms},
+      ${deadline_ms},
       ${wait_for_ready});
 
   int N = 100;
