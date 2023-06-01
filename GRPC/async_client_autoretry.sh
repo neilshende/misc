@@ -58,7 +58,10 @@ done
 
 cat <<EOF
   // struct for keeping state and data information
-  struct ${service}AsyncClientCall {
+  class ${service}AsyncClientCall {
+  public:
+     AsyncClientCall() {};
+     ~AsyncClientCall() { delete context; };
 
     // identify which call was made
     int rpcid;
