@@ -10,8 +10,10 @@ deadline_ms=-1
 wait_for_ready="true"
 max_retry_count=3
 
+sem_bug=1
+
 cat <<EOF
-#define SEM_BUG 1
+#define SEM_BUG ${sem_bug}
 #include <iostream>
 #include <memory>
 #include <string>
@@ -91,7 +93,7 @@ cat <<EOF
     Status status;
 
     // signal when done
-#ifdef SEM_BUG
+#if SEM_BUG
     std::mutex sem;
 #else
     stdi::counting_semaphore<1> sem{0};
@@ -156,7 +158,7 @@ cat <<EOF
         call = new ${service}AsyncClientCall;
         call->rpcid = ${rpcid[$i]};
         call->${pref[i]}_request = req;
-#ifdef SEM_BUG
+#if SEM_BUG
         call->sem.lock();
 #endif
     } else {
@@ -238,7 +240,7 @@ done
 
 cat <<EOF
       } else {
-#ifdef SEM_BUG
+#if SEM_BUG
          call->sem.unlock();
 #else
          call->sem.release();
@@ -290,7 +292,7 @@ int main(int argc, char** argv) {
        std::this_thread::sleep_for(std::chrono::milliseconds(200));
   }
   for (i = 0; i < N; i++) {
-#ifdef SEM_BUG
+#if SEM_BUG
       call_contexts[i]->sem.lock();  //call complete
 #else
       call_contexts[i]->sem.acquire(); // call complete
