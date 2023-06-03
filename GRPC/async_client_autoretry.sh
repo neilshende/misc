@@ -11,9 +11,12 @@ wait_for_ready="true"
 max_retry_count=3
 
 sem_bug=1
+unit_test=1
 
 cat <<EOF
 #define SEM_BUG ${sem_bug}
+#define UNIT_TEST ${unit_test}
+
 #include <iostream>
 #include <memory>
 #include <string>
@@ -258,13 +261,27 @@ cat <<EOF
   // The producer-consumer queue we use to communicate asynchronously with the
   // gRPC runtime.
   CompletionQueue cq_;
+
+  // thread to start AsyncCompleteRpc
   std::thread thread_;
+
+  // indicate when to shutdown_ AsyncCompleteRpc
   bool shutdown_;
+
+  // deadline for each RPC. Set it to -1 for a large deadline or large enough value.
   int deadline_ms_;
+
+  // Flag indicating if we want to wait for server to be ready or fail fast.
   bool wait_for_ready_;
+
+  // Number of retries for failed RPCs.
+  // No need to implement the exponetial backoff for retries. The wait_for_ready flag
+  // indirectly takes care of it.
   int max_retry_count_;
 
 };
+
+#if UNIT_TEST
 
 int main(int argc, char** argv) {
   absl::ParseCommandLine(argc, argv);
@@ -274,13 +291,20 @@ int main(int argc, char** argv) {
   std::string target_str = absl::GetFlag(FLAGS_target);
   // We indicate that the channel isn't authenticated (use of
   // InsecureChannelCredentials())
+
+
+  // Start the client for the service ${service}
+  // The client reconnects is the server restarts and retries the failed RPCs.
   ${service}Client *greeter = new ${service}Client(
       grpc::CreateChannel(target_str, grpc::InsecureChannelCredentials()),
-      ${deadline_ms},
-      ${wait_for_ready});
+      ${deadline_ms}, //deadline_ms
+      ${wait_for_ready}, //wait_for_ready
+      ${max_retry_count}); //max_retry_count
 
   int N = 100;
   int i;
+
+  // Async client call contexts
   ${service}AsyncClientCall* call_contexts[N];
 
   for (i = 0; i < N; i++) {
@@ -312,4 +336,6 @@ int main(int argc, char** argv) {
   return 0;
 }
 
+#endif //UNIT_TEST
 EOF
+
