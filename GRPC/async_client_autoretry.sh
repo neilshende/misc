@@ -3,8 +3,9 @@ service=Greeter
 replies=(HelloReply YelloReply)
 requests=(HelloRequest YelloRequest)
 rpcs=(SayHello SayYello)
-rpcid=(0 1)
-pref=(h y)
+
+rpcid=($(seq 1 ${#rpcs[@]}))
+pref=(${rpcs[@]})
 
 deadline_ms=-1
 wait_for_ready="true"
