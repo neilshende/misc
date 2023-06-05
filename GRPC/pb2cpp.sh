@@ -1,6 +1,6 @@
 #!/bin/bash
-tmp=./tmp_intermidiate_script.sh
-cat $1 | awk -f proto.awk | tr -d "()" | sed 's/\[/(/g' | sed 's/\]/)/g' >$tmp
+tmp=./tmp_intermediate_script.sh
+cat $1 | sed 's/(/ ( /g' | sed 's/)/ ) /g' | awk -f proto.awk > $tmp
 cat async_copy_script.sh >>$tmp
 chmod a+x $tmp
 $($tmp > $2)
