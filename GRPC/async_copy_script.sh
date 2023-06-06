@@ -342,7 +342,6 @@ int main(int argc, char** argv) {
       else
         std::cout << "RPC failed with " << call_contexts[i]->status.error_code() << std::endl;
   }
-  std::cout << "Quitting\n";
   for (i = 0; i < N; i++) {
 
       // Once we're complete, deallocate the call object.
@@ -360,6 +359,7 @@ int main(int argc, char** argv) {
       std::cout << "Sync reply: " << rep.message() << std::endl;
   }
 
+  std::cout << "Quitting\n";
   delete greeter;
   return 0;
 }
