@@ -357,7 +357,6 @@ int main(int argc, char** argv) {
   int err;
   greeter->${rpcs[0]}(req, &rep, &err);
   if (err==0) {
-      std::cout << "no error on async call\n";
       std::cout << "Sync reply: " << rep.message() << std::endl;
   }
 
