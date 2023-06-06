@@ -69,7 +69,7 @@ cat <<EOF
     // identify which call was made
     int rpcid;
 
-    // Container for the data we expect from the server.
+    // Container for the data we expect to and from the server.
 EOF
 
 i=0
@@ -95,8 +95,9 @@ cat <<EOF
 #if SEM_BUG
     std::mutex sem;
 #else
-    std::counting_semaphore<1> sem{0};
+    std::counting_semaphore<1> sem{1};
 #endif
+
    // Async responses readers 
 EOF
 
@@ -113,7 +114,7 @@ cat <<EOF
 
 // This class implements async and sync client for a service. The object created via this class
 // shall remain functional as long as the service is up. If the server goes down,
-// this clsas will automatically reconnect. Any RPC that failed with UNAVIALABLE will be
+// this class will automatically reconnect. Any RPC that failed with UNAVIALABLE will be
 // automatically dispatched. The retried RPC will wait for server to be ready. It is therefore
 // necessay to keep the deadline large or not set the deadline for each RPC at all.
 class ${service}Client {
