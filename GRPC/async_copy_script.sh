@@ -144,27 +144,24 @@ i=0
 for rpc in ${rpcs[@]}; do
 cat <<EOF
 
-  //sync API
+  //sync rpc ${rpc}
   void ${rpc}(const ${requests[$i]} req,
                 ${replies[$i]} *rep,
                 int *err) {
      ${service}AsyncClientCall *call = ${rpc}(req);
-     std::cout << "call dispatched\n";
 #if SEM_BUG
      call->sem.lock();
 #else
      call->sem.acquire();
 #endif
-     std::cout << "call complete\n";
      *err = call->status.error_code();
-     std::cout << "Async call error " << *err << std::endl;
      if (*err == 0) {
         *rep = call->${pref[$i]}_reply;
      }
-     std::cout << "deleteing context\n";
      delete call;
    }
 
+  // async as well as retry entry point for ${rpc}
   // Assembles the client's payload and sends it to the server.
   ${service}AsyncClientCall* ${rpc}(const ${requests[$i]} req,
      ${service}AsyncClientCall *callp=NULL) {
@@ -350,7 +347,6 @@ int main(int argc, char** argv) {
       // Once we're complete, deallocate the call object.
       delete call_contexts[i];
   }
-  delete greeter;
 
   ${replies[0]} rep;
   ${requests[0]} req;
@@ -364,6 +360,7 @@ int main(int argc, char** argv) {
       std::cout << "Sync reply: " << rep.message() << std::endl;
   }
 
+  delete greeter;
   return 0;
 }
 
