@@ -95,7 +95,7 @@ cat <<EOF
 #if SEM_BUG
     std::mutex sem;
 #else
-    stdi::counting_semaphore<1> sem{0};
+    std::counting_semaphore<1> sem{0};
 #endif
    // Async responses readers 
 EOF
@@ -111,7 +111,7 @@ done
 cat <<EOF
   };
 
-// This class implements async client for a service. The object created via this class
+// This class implements async and sync client for a service. The object created via this class
 // shall remain functional as long as the service is up. If the server goes down,
 // this clsas will automatically reconnect. Any RPC that failed with UNAVIALABLE will be
 // automatically dispatched. The retried RPC will wait for server to be ready. It is therefore
@@ -135,16 +135,36 @@ class ${service}Client {
   }
   ~${service}Client() {
       shutdown_ = true;
-      std::cout << "Trying to quit\n";
       cq_.Shutdown();
       thread_.join();
-      std::cout << "BYE BYE\n";
   }
 EOF
 
 i=0
 for rpc in ${rpcs[@]}; do
 cat <<EOF
+
+  //sync API
+  void ${rpc}(const ${requests[$i]} req,
+                ${replies[$i]} *rep,
+                int *err) {
+     ${service}AsyncClientCall *call = ${rpc}(req);
+     std::cout << "call dispatched\n";
+#if SEM_BUG
+     call->sem.lock();
+#else
+     call->sem.acquire();
+#endif
+     std::cout << "call complete\n";
+     *err = call->status.error_code();
+     std::cout << "Async call error " << *err << std::endl;
+     if (*err == 0) {
+        *rep = call->${pref[$i]}_reply;
+     }
+     std::cout << "deleteing context\n";
+     delete call;
+   }
+
   // Assembles the client's payload and sends it to the server.
   ${service}AsyncClientCall* ${rpc}(const ${requests[$i]} req,
      ${service}AsyncClientCall *callp=NULL) {
@@ -159,11 +179,13 @@ cat <<EOF
         call->${pref[i]}_request = req;
 #if SEM_BUG
         call->sem.lock();
+#else
+        call->sem.acquire();
 #endif
     } else {
         // This is a retry
         callp->retry_count++;
-        std::cout << "retrying: " <<  callp->${pref[i]}_request.name()  <<" count " << callp->retry_count << std::endl;
+        std::cout << "retrying: count=" << callp->retry_count << std::endl;
         call = callp;
         delete call->context;
     }
@@ -329,6 +351,19 @@ int main(int argc, char** argv) {
       delete call_contexts[i];
   }
   delete greeter;
+
+  ${replies[0]} rep;
+  ${requests[0]} req;
+  std::string str("This is a test of sync call");
+  req.set_name(str);
+  std::cout << str << std::endl;
+  int err;
+  greeter->${rpcs[0]}(req, &rep, &err);
+  if (err==0) {
+      std::cout << "no error on async call\n";
+      std::cout << "Sync reply: " << rep.message() << std::endl;
+  }
+
   return 0;
 }
 
