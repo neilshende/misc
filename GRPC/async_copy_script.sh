@@ -183,7 +183,6 @@ cat <<EOF
     } else {
         // This is a retry
         callp->retry_count++;
-        std::cout << "retrying: count=" << callp->retry_count << std::endl;
         call = callp;
         delete call->context;
     }
