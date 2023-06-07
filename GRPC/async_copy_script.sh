@@ -146,20 +146,20 @@ for rpc in ${rpcs[@]}; do
 cat <<EOF
 
   //sync rpc ${rpc}
-  void ${rpc}(const ${requests[$i]} req,
-                ${replies[$i]} *rep,
-                int *err) {
+  Status ${rpc}(const ${requests[$i]} req,
+                ${replies[$i]} *rep) {
      ${service}AsyncClientCall *call = ${rpc}(req);
 #if SEM_BUG
      call->sem.lock();
 #else
      call->sem.acquire();
 #endif
-     *err = call->status.error_code();
-     if (*err == 0) {
+     if (call->status.ok()) {
         *rep = call->${pref[$i]}_reply;
      }
+     Status status = call->status;
      delete call;
+     return status;
    }
 
   // async as well as retry entry point for ${rpc}
@@ -353,9 +353,8 @@ int main(int argc, char** argv) {
   std::string str("This is a test of sync call");
   req.set_name(str);
   std::cout << str << std::endl;
-  int err;
-  greeter->${rpcs[0]}(req, &rep, &err);
-  if (err==0) {
+  Status status = greeter->${rpcs[0]}(req, &rep);
+  if (status.ok()) {
       std::cout << "Sync reply: " << rep.message() << std::endl;
   }
 
