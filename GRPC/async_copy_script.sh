@@ -2,7 +2,7 @@
 rpcid=($(seq 1 ${#rpcs[@]}))
 pref=(${rpcs[@]})
 
-deadline_ms=-1
+deadline_ms=60000
 wait_for_ready="true"
 max_retry_count=3
 
@@ -42,6 +42,19 @@ using ${package}::${service};
 
 ABSL_FLAG(std::string, target, "localhost:50051", "Server address");
 
+class ${service}RetryContext {
+public:
+   int deadline_ms;
+   int max_retry_count;
+   bool wait_for_ready;
+   ${service}RetryContext(int d, int mr, bool wfr) {
+       deadline_ms = d;
+       max_retry_count = mr;
+       wait_for_ready = wfr;
+   };
+   ~${service}RetryContext() {};
+};
+
 EOF
 
 for reply in ${replies[@]}; do
@@ -61,7 +74,16 @@ cat <<EOF
   class ${service}AsyncClientCall {
   public:
      ${service}AsyncClientCall() {retry_count = 0;};
-     ~${service}AsyncClientCall() { delete context; };
+     ~${service}AsyncClientCall() {delete context;};
+
+    // client context to set dealine etc.
+    ClientContext *context;
+
+    //override the main class params 
+    int deadline_ms;
+    int max_retry_count;
+    bool wait_for_ready;
+
 
     // how many retries so far?
     int retry_count;
@@ -83,10 +105,6 @@ EOF
 done
 
 cat <<EOF
-
-    // Context for the client. It could be used to convey extra information to
-    // the server and/or tweak certain RPC behaviors.
-    ClientContext *context;
 
     // Storage for the status of the RPC upon completion.
     Status status;
@@ -146,9 +164,10 @@ for rpc in ${rpcs[@]}; do
 cat <<EOF
 
   //sync rpc ${rpc}
-  Status ${rpc}(const ${requests[$i]} req,
+  Status ${rpc}(${service}RetryContext *ctx,
+                const ${requests[$i]} req,
                 ${replies[$i]} *rep) {
-     ${service}AsyncClientCall *call = ${rpc}(req);
+     ${service}AsyncClientCall *call = ${rpc}(ctx, req);
 #if SEM_BUG
      call->sem.lock();
 #else
@@ -164,10 +183,11 @@ cat <<EOF
 
   // async as well as retry entry point for ${rpc}
   // Assembles the client's payload and sends it to the server.
-  ${service}AsyncClientCall* ${rpc}(const ${requests[$i]} req,
+  ${service}AsyncClientCall* ${rpc}(${service}RetryContext *ctx,
+     const ${requests[$i]} req,
      ${service}AsyncClientCall *callp=NULL) {
-    // Data we are sending to the server.
-    //${requests[i]} request(req);
+
+    //ClientContext context;   FIXME
 
     ${service}AsyncClientCall* call = NULL;
     if (callp == NULL) {
@@ -175,6 +195,9 @@ cat <<EOF
         call = new ${service}AsyncClientCall;
         call->rpcid = ${rpcid[$i]};
         call->${pref[i]}_request = req;
+        call->max_retry_count = ctx==NULL ? max_retry_count_ : ctx->max_retry_count;
+        call->deadline_ms = ctx==NULL ? deadline_ms_ : ctx->deadline_ms;
+        call->wait_for_ready = ctx==NULL ? wait_for_ready_ : ctx->wait_for_ready;
 #if SEM_BUG
         call->sem.lock();
 #else
@@ -186,7 +209,9 @@ cat <<EOF
         call = callp;
         delete call->context;
     }
-    call->context = new ClientContext;
+
+    // allocate new client context
+    call->context = new ClientContext();
 
     if (deadline_ms_ > 0) {
        // Set deadline for this rpc.
@@ -196,11 +221,11 @@ cat <<EOF
        // If the server does not respond before the deadline, the client
        // will error out with DEADLINE_EXCEEDED (4).
        auto deadline = std::chrono::system_clock::now() +
-       std::chrono::milliseconds(deadline_ms_);
+       std::chrono::milliseconds(call->deadline_ms);
        call->context->set_deadline(deadline);
     }
 
-    call->context->set_wait_for_ready(wait_for_ready_);
+    call->context->set_wait_for_ready(call->wait_for_ready);
 
     // stub_->PrepareAsync${rpc}() creates an RPC object, returning
     // an instance to store in "call" but does not actually start the RPC
@@ -244,14 +269,14 @@ cat <<EOF
           && wait_for_ready_
           && !call->status.ok()
           && call->status.error_code() == grpc::UNAVAILABLE
-          && call->retry_count < max_retry_count_) {
+          && call->retry_count < call->max_retry_count) {
 
 EOF
 
 i=0
 for rpc in ${rpcs[@]}; do
 cat <<EOF
-         if (call->rpcid == ${rpcid[i]}) ${rpcs[$i]}(call->${pref[i]}_request, call);
+         if (call->rpcid == ${rpcid[i]}) ${rpcs[$i]}(NULL, call->${pref[i]}_request, call);
 EOF
 ((i++))
 done
@@ -327,7 +352,7 @@ int main(int argc, char** argv) {
        ${requests[1]} req;
        std::cout <<  "calling ${rpcs[1]} " << i << "\n";
        req.set_name(user); // FIXME for each RPC pack the request.
-       call_contexts[i] = greeter->${rpcs[1]}(req);  // The RPC dispatch!
+       call_contexts[i] = greeter->${rpcs[1]}(NULL, req);  // The RPC dispatch!
        std::this_thread::sleep_for(std::chrono::milliseconds(200));
   }
   for (i = 0; i < N; i++) {
@@ -349,10 +374,14 @@ int main(int argc, char** argv) {
 
   ${replies[0]} rep;
   ${requests[0]} req;
+  ${service}RetryContext ctx(
+            ${deadline_ms},
+            ${max_retry_count},
+            ${wait_for_ready});
   std::string str("This is a test of sync call");
   req.set_name(str);
   std::cout << str << std::endl;
-  Status status = greeter->${rpcs[0]}(req, &rep);
+  Status status = greeter->${rpcs[0]}(&ctx, req, &rep);
   if (status.ok()) {
       std::cout << "Sync reply: " << rep.message() << std::endl;
   }
