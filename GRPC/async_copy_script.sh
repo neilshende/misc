@@ -187,8 +187,6 @@ cat <<EOF
      const ${requests[$i]} req,
      ${service}AsyncClientCall *callp=NULL) {
 
-    //ClientContext context;   FIXME
-
     ${service}AsyncClientCall* call = NULL;
     if (callp == NULL) {
         // Call object to store rpc data
@@ -266,7 +264,7 @@ cat <<EOF
       GPR_ASSERT(ok);
 
       if (!shutdown_
-          && wait_for_ready_
+          && call->wait_for_ready
           && !call->status.ok()
           && call->status.error_code() == grpc::UNAVAILABLE
           && call->retry_count < call->max_retry_count) {
