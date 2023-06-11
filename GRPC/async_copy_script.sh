@@ -212,7 +212,7 @@ cat <<EOF
     // allocate new client context
     call->context = new ClientContext();
 
-    if (deadline_ms_ > 0) {
+    if (call->deadline_ms > 0) {
        // Set deadline for this rpc.
        // default deadline for GRPC is very large -- if the server is up
        // it's almost an eternity.
