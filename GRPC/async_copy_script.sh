@@ -42,19 +42,6 @@ using ${package}::${service};
 
 ABSL_FLAG(std::string, target, "localhost:50051", "Server address");
 
-class ${service}RetryContext {
-public:
-   int deadline_ms;
-   int max_retry_count;
-   bool wait_for_ready;
-   ${service}RetryContext(int d, int mr, bool wfr) {
-       deadline_ms = d;
-       max_retry_count = mr;
-       wait_for_ready = wfr;
-   };
-   ~${service}RetryContext() {};
-};
-
 EOF
 
 for reply in ${replies[@]}; do
@@ -70,35 +57,49 @@ EOF
 done
 
 cat <<EOF
-  // struct for keeping state and data information
-  class ${service}AsyncClientCall {
-  public:
-     ${service}AsyncClientCall() {retry_count = 0;};
-     ~${service}AsyncClientCall() {delete context;};
 
-    // client context to set dealine etc.
-    ClientContext *context;
+class ${service}RetryContext {
+public:
+   int deadline_ms;
+   int max_retry_count;
+   bool wait_for_ready;
+   ${service}RetryContext(int d, int mr, bool wfr) {
+       deadline_ms = d;
+       max_retry_count = mr;
+       wait_for_ready = wfr;
+   };
+   ~${service}RetryContext() {};
+};
 
-    //override the main class params 
-    int deadline_ms;
-    int max_retry_count;
-    bool wait_for_ready;
+// struct for keeping state and data information
+class ${service}AsyncClientCall {
+public:
+   ${service}AsyncClientCall() {retry_count = 0;};
+   ~${service}AsyncClientCall() {delete context;};
+
+  // client context to set deadline, wait_for_ready.
+  ClientContext *context;
+
+  //override the main class params 
+  int deadline_ms;
+  int max_retry_count;
+  bool wait_for_ready;
 
 
-    // how many retries so far?
-    int retry_count;
+  // how many retries so far?
+  int retry_count;
 
-    // identify which call was made
-    int rpcid;
+  // identify which call was made
+  int rpcid;
 
-    // Container for the data we expect to and from the server.
+  // Container for the data we expect to and from the server.
 EOF
 
 i=0
 for reply in ${replies[@]}; do
 cat <<EOF
-    ${requests[$i]} ${pref[$i]}_request;
-    ${reply} ${pref[$i]}_reply;
+  ${requests[$i]} ${pref[$i]}_request;
+  ${reply} ${pref[$i]}_reply;
 
 EOF
 ((i++))
@@ -106,29 +107,29 @@ done
 
 cat <<EOF
 
-    // Storage for the status of the RPC upon completion.
-    Status status;
+  // Storage for the status of the RPC upon completion.
+  Status status;
 
-    // signal when done
+  // signal when done
 #if SEM_BUG
-    std::mutex sem;
+  std::mutex sem;
 #else
-    std::counting_semaphore<1> sem{1};
+  std::counting_semaphore<1> sem{1};
 #endif
 
-   // Async responses readers 
+  // Async responses readers 
 EOF
 
 i=0
 for reply in ${replies[@]}; do
 cat <<EOF
-    std::unique_ptr<ClientAsyncResponseReader<${reply}>> ${pref[$i]}_response_reader;
+  std::unique_ptr<ClientAsyncResponseReader<${reply}>> ${pref[$i]}_response_reader;
 EOF
 ((i++))
 done
 
 cat <<EOF
-  };
+};
 
 // This class implements async and sync client for a service. The object created via this class
 // shall remain functional as long as the service is up. If the server goes down,
@@ -249,7 +250,9 @@ done
 
 cat <<EOF
   // Loop while listening for completed responses.
-  // Prints out the response from the server.
+  // Also responsible for 1. retrying the failed RPC. 2. Signaling completed RPC.
+  // A completed RPC is one which has not failed with UNAVAILABLE or whose
+  // retries have exhausted.
   void AsyncCompleteRpc() {
     void* got_tag;
     bool ok = false;
