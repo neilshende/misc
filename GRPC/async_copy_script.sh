@@ -22,6 +22,7 @@ cat <<EOF
 
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
+ABSL_FLAG(std::string, target, "localhost:50051", "Server address");
 
 #include <grpc/support/log.h>
 #include <grpcpp/grpcpp.h>
@@ -31,16 +32,12 @@ cat <<EOF
 #include "${package}.grpc.pb.h"
 #endif
 
-#include <unistd.h>
-
 using grpc::Channel;
 using grpc::ClientAsyncResponseReader;
 using grpc::ClientContext;
 using grpc::CompletionQueue;
 using grpc::Status;
 using ${package}::${service};
-
-ABSL_FLAG(std::string, target, "localhost:50051", "Server address");
 
 EOF
 
@@ -57,6 +54,29 @@ EOF
 done
 
 cat <<EOF
+
+#include <mutex>
+#include <condition_variable>
+
+class ${service}semaphore {
+    std::mutex mutex_;
+    std::condition_variable condition_;
+    unsigned long count_ = 1; // Initialized as unlocked.
+
+public:
+    void release() {
+        std::lock_guard<decltype(mutex_)> lock(mutex_);
+        ++count_;
+        condition_.notify_one();
+    }
+
+    void acquire() {
+        std::unique_lock<decltype(mutex_)> lock(mutex_);
+        while(!count_) // Handle spurious wake-ups.
+            condition_.wait(lock);
+        --count_;
+    }
+};
 
 class ${service}RetryContext {
 public:
@@ -112,7 +132,7 @@ cat <<EOF
 
   // signal when done
 #if SEM_BUG
-  std::mutex sem;
+  ${service}semaphore sem;
 #else
   std::counting_semaphore<1> sem{1};
 #endif
@@ -169,11 +189,7 @@ cat <<EOF
                 const ${requests[$i]} req,
                 ${replies[$i]} *rep) {
      ${service}AsyncClientCall *call = ${rpc}(ctx, req);
-#if SEM_BUG
-     call->sem.lock();
-#else
      call->sem.acquire();
-#endif
      if (call->status.ok()) {
         *rep = call->${pref[$i]}_reply;
      }
@@ -197,11 +213,7 @@ cat <<EOF
         call->max_retry_count = ctx==NULL ? max_retry_count_ : ctx->max_retry_count;
         call->deadline_ms = ctx==NULL ? deadline_ms_ : ctx->deadline_ms;
         call->wait_for_ready = ctx==NULL ? wait_for_ready_ : ctx->wait_for_ready;
-#if SEM_BUG
-        call->sem.lock();
-#else
         call->sem.acquire();
-#endif
     } else {
         // This is a retry
         callp->retry_count++;
@@ -284,11 +296,7 @@ done
 
 cat <<EOF
       } else {
-#if SEM_BUG
-         call->sem.unlock();
-#else
          call->sem.release();
-#endif
       }
       if (shutdown_) break;
     }
@@ -357,11 +365,7 @@ int main(int argc, char** argv) {
        std::this_thread::sleep_for(std::chrono::milliseconds(200));
   }
   for (i = 0; i < N; i++) {
-#if SEM_BUG
-      call_contexts[i]->sem.lock();  //call complete
-#else
       call_contexts[i]->sem.acquire(); // call complete
-#endif
       if (call_contexts[i]->status.ok())
             std::cout << "${service} received: " << call_contexts[i]->${pref[1]}_reply.message() << std::endl;
       else
