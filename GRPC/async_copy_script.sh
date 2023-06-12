@@ -55,10 +55,12 @@ done
 
 cat <<EOF
 
+#if SEM_BUG
+
 #include <mutex>
 #include <condition_variable>
 
-class ${service}semaphore {
+class ${service}Semaphore {
     std::mutex mutex_;
     std::condition_variable condition_;
     unsigned long count_ = 1; // Initialized as unlocked.
@@ -77,6 +79,10 @@ public:
         --count_;
     }
 };
+
+#else
+#include <semaphore>
+#endif //SEM_BUG
 
 class ${service}RetryContext {
 public:
@@ -132,7 +138,7 @@ cat <<EOF
 
   // signal when done
 #if SEM_BUG
-  ${service}semaphore sem;
+  ${service}Semaphore sem;
 #else
   std::counting_semaphore<1> sem{1};
 #endif
