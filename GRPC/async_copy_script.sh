@@ -17,7 +17,6 @@ cat <<EOF
 #include <memory>
 #include <string>
 #include <thread>
-#include <semaphore>
 #include <chrono>
 
 #include "absl/flags/flag.h"
@@ -56,7 +55,6 @@ done
 cat <<EOF
 
 #if SEM_BUG
-
 #include <mutex>
 #include <condition_variable>
 
@@ -110,7 +108,6 @@ public:
   int deadline_ms;
   int max_retry_count;
   bool wait_for_ready;
-
 
   // how many retries so far?
   int retry_count;
