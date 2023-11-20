@@ -18,7 +18,7 @@ func multiSignalHandler(signal os.Signal) {
 		os.Exit(0)
 	case syscall.SIGTERM:
 		fmt.Println("Signal TERM VIVEK:", signal.String())
-		os.Exit(0)
+		//os.Exit(0)
 	case syscall.SIGQUIT:
 		fmt.Println("Signal:", signal.String())
 		os.Exit(0)

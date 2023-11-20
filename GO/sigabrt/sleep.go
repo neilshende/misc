@@ -2,6 +2,11 @@ package main
 // #cgo CFLAGS: -g -Wall
 // #include <stdlib.h>
 // #include "greeter.h"
+/*
+#cgo CFLAGS: -I.
+#cgo LDFLAGS: -L.
+#cgo LDFLAGS: -lgreeter.so
+*/
 import "C"
 import (
     "fmt"
