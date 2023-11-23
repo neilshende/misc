@@ -22,6 +22,7 @@ cat <<EOF
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 ABSL_FLAG(std::string, target, "localhost:50051", "Server address");
+ABSL_FLAG(int, count, 100, "count of IPCs");
 
 #include <grpc/support/log.h>
 #include <grpcpp/grpcpp.h>
@@ -353,7 +354,7 @@ int main(int argc, char** argv) {
       ${wait_for_ready}, //wait_for_ready
       ${max_retry_count}); //max_retry_count
 
-  int N = 100;
+  int N = absl::GetFlag(FLAGS_count);
   int i;
 
   // Async client call contexts
