@@ -7,10 +7,12 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import Ridge, RidgeCV, Lasso
 from sklearn.preprocessing import StandardScaler
-from sklearn.datasets import load_boston
+#from sklearn.datasets import load_boston
+from sklearn.datasets import fetch_openml
 
 #data
-boston = load_boston()
+#boston = load_boston()
+boston = fetch_openml(name="house_prices", as_frame=True)
 boston_df=pd.DataFrame(boston.data,columns=boston.feature_names)
 #target variable
 boston_df['Price']=boston.target
@@ -19,9 +21,9 @@ boston_df.head()
 
 #Exploration
 plt.figure(figsize = (10, 10))
-sns.heatmap(boston_df.corr(), annot = True)
+#sns.heatmap(boston_df.corr(), annot = True)
 #There are cases of multicolinearity, we will drop a few columns
-boston_df.drop(columns = ["INDUS", "NOX"], inplace = True)
+#boston_df.drop(columns = ["INDUS", "NOX"], inplace = True)
 
 #pairplot
 sns.pairplot(boston_df)
