@@ -1,0 +1,7 @@
+library(Matrix)
+set.seed(42)
+      f1 <- factor(sample(50, 1000, replace=TRUE))
+      f2 <- factor(sample(50, 1000, replace=TRUE))
+      f3 <- factor(sample(50, 1000, replace=TRUE))
+      D <- t(do.call(rbind, lapply(list(f1,f2,f3), as, 'sparseMatrix')))
+rankMatrix(D)
