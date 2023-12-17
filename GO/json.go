@@ -20,4 +20,12 @@ func main() {
         return;
     }
     fmt.Println(string(b))
+    x := 5
+    x, y := 6, 7 //x not shadowed
+    x, z := 7, 8 //x not shadowed
+    { x, a := 2, 3 //x shadowed
+      x = x
+      a = a
+    }
+    fmt.Printf("x, y, z is %d %d %d", x, y, z);
 }
