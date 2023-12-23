@@ -1,6 +1,24 @@
 #include <iostream>
 using namespace std;
+class hello {
+private:
+   int magic;
+public:
+  void print() {
+     cout << "Hello " << magic << endl;
+   }
+  hello() { magic = 911911;}
+  ~hello() { magic = 199199;}
+  int getmagic() { return magic;}
+};
 int main(int argc, char *argv[]) {
-   cout << argc << " Hello World\n";
+   hello *h = new hello;
+   long p = reinterpret_cast<long>(h);
+   cout << reinterpret_cast<hello *>(p)->getmagic() << endl;
+   hello *h2 = reinterpret_cast<hello *>(p+100);
+   cout << (h2->getmagic()==911911? "good" : "bad") << endl;
+   h2->print();
+   delete h;
+   cout <<  reinterpret_cast<hello *>(p)->getmagic() << endl;
    return 0;
 }
