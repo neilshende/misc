@@ -13,8 +13,11 @@ public:
 };
 int main(int argc, char *argv[]) {
    hello *h = new hello;
+   long c = (long)h;
+   hello *hc = (hello *)c;
+   cout << "c style cast " << hc->getmagic() << endl;
    long p = reinterpret_cast<long>(h);
-   cout << reinterpret_cast<hello *>(p)->getmagic() << endl;
+   cout << "c++ cast " << reinterpret_cast<hello *>(p)->getmagic() << endl;
    hello *h2 = reinterpret_cast<hello *>(p+100);
    cout << (h2->getmagic()==911911? "good" : "bad") << endl;
    h2->print();
