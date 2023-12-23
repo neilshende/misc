@@ -1,5 +1,6 @@
 package main
 import (
+	"flag"
 	"encoding/gob"
 	"fmt"
 	"net"
@@ -50,8 +51,13 @@ func client() {
 	c.Close()
 }
 func main() {
-	go server()
-	go client()
+	serv := flag.Bool("server", false, "Am I a server?")
+	flag.Parse()
+	if *serv {
+		go server()
+	} else {
+		go client()
+	}
 	var input string
 	fmt.Scanln(&input)
 }
