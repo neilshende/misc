@@ -57,6 +57,22 @@ func main() {
 		log.Fatalf("could not greet: %v", err)
 	}
 	log.Printf("Greeting: %s", r.GetMessage())
+
+	echan := make(chan error)
+	rchan := make(chan *pb.HelloReply)
+	go func () {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		r, e := c.SayHello(ctx, &pb.HelloRequest{Name: "Async"})
+		echan <- e
+		rchan <- r
+	} ()
+	ea, ra := <-echan, <-rchan
+	if ea != nil {
+		log.Printf("Async call fail: %v", ea)
+	}
+	log.Printf("Greeting: %s", ra.GetMessage())
+
 	ctx2, cancel2 := context.WithTimeout(context.Background(), time.Second)
 	defer cancel2()
 	r, err = c.SayHelloAgain(ctx2, &pb.HelloRequest{Name: "Fail"})
