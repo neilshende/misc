@@ -70,16 +70,18 @@ func main() {
 	ea, ra := <-echan, <-rchan
 	if ea != nil {
 		log.Printf("Async call fail: %v", ea)
+	} else {
+		log.Printf("Greeting: %s", ra.GetMessage())
 	}
-	log.Printf("Greeting: %s", ra.GetMessage())
 
 	ctx2, cancel2 := context.WithTimeout(context.Background(), time.Second)
 	defer cancel2()
 	r, err = c.SayHelloAgain(ctx2, &pb.HelloRequest{Name: "Fail"})
 	if err != nil {
 		log.Printf("could not greet: %v", err)
+	} else {
+		log.Printf("Greeting: %s", r.GetMessage())
 	}
-	log.Printf("Greeting: %s", r.GetMessage())
 
   ctx3, cancel3 := context.WithTimeout(context.Background(), 30*time.Second)
   defer cancel3()
@@ -103,8 +105,9 @@ func main() {
     if ctx3.Err() == context.DeadlineExceeded {
       log.Println("RPC call timed out")
     } else {
-      log.Fatalf("failed to receive response: %v", err)
+      log.Printf("failed to receive response: %v", err)
     }
+  } else {
+    log.Printf("Greeting: %s", resp.Message)
   }
-  log.Println("Greeting:", resp.Message)
 }
