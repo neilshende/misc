@@ -1,6 +1,7 @@
 package main
 
 import (
+  atomic "go.uber.org/atomic"
   "context"
   "errors"
   "fmt"
@@ -30,6 +31,8 @@ func isPrime(ctx context.Context, num int) (bool, error) {
 }
 
 func isPrimeV2(ctx context.Context, num int) (bool, error) {
+  var quit atomic.Value
+  quit.Store(false)
   b := make(chan bool)
   go func(num int) {
        if num <= 1 {
@@ -38,6 +41,9 @@ func isPrimeV2(ctx context.Context, num int) (bool, error) {
        }
        limit := int(math.Sqrt(float64(num)))
        for i := 2; i <= limit; i++ {
+          if quit.Load().(bool) {
+             return
+          }
           if num%i == 0 {
             b <- false
             return
@@ -50,12 +56,13 @@ func isPrimeV2(ctx context.Context, num int) (bool, error) {
    case bb := <-b:
       return bb, nil
    case <-ctx.Done():
+      quit.Store(true)
       return false, errors.New("context cancelled")
    }
 }
 
 func main() {
-  num := 2147483647
+  num := 9
 
   // Create a context with no deadline (effectively infinite)
   ctx := context.Background()
@@ -66,8 +73,9 @@ func main() {
     fmt.Println(num, "is prime:", isPrime)
   }
 
+  num = 2147483647
   // Create a context with timeout of one second.
-  ctx2, cancel := context.WithTimeout(context.Background(), time.Second)
+  ctx2, cancel := context.WithTimeout(context.Background(), time.Second/1000000)
   defer cancel()
   isPrime, err = isPrimeV2(ctx2, num)
   if err != nil {
