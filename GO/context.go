@@ -8,7 +8,7 @@ import (
   "time"
 )
 
-func isPrimeWithContext(ctx context.Context, num int) (bool, error) {
+func isPrime(ctx context.Context, num int) (bool, error) {
   if num <= 1 {
     return false, nil // Not prime, but no error
   }
@@ -29,21 +29,13 @@ func isPrimeWithContext(ctx context.Context, num int) (bool, error) {
 
   return true, nil // Prime, no error
 }
-func main() {
-  num := 2147483647
 
-  // Create a context with no deadline (effectively infinite)
-  ctx := context.Background()
-
-  isPrime, err := isPrimeWithContext(ctx, num)
-  if err != nil {
-    fmt.Println("Error:", err)
-  } else {
-    fmt.Println(num, "is prime:", isPrime)
-  }
-
+func isPrimeV2(ctx context.Context, num int) (bool, error) {
   b := make(chan bool)
   go func(num int) {
+       if num <= 1 {
+          b <- false
+       }
        limit := int(math.Sqrt(float64(num)))
        for i := 2; i < limit; i++ {
           if num%i == 0 {
@@ -54,12 +46,34 @@ func main() {
         b <- true
    } (num)
 
-  ctx2, cancel := context.WithTimeout(context.Background(), time.Second)
-  defer cancel()
   select {
    case bb := <-b:
-      fmt.Println(num, "is prime:", bb)
-   case <-ctx2.Done():
-      fmt.Println("Timeout")
+      return bb, nil
+   case <-ctx.Done():
+      return false, errors.New("context cancelled")
    }
+}
+
+func main() {
+  num := 2147483647
+
+  // Create a context with no deadline (effectively infinite)
+  ctx := context.Background()
+  isPrime, err := isPrime(ctx, num)
+  if err != nil {
+    fmt.Println("Error:", err)
+  } else {
+    fmt.Println(num, "is prime:", isPrime)
+  }
+
+  // Create a context with timeout of one second.
+  ctx2, cancel := context.WithTimeout(context.Background(), time.Second)
+  defer cancel()
+  isPrime, err = isPrimeV2(ctx2, num)
+  if err != nil {
+    fmt.Println("Error:", err)
+  } else {
+    fmt.Println(num, "is prime:", isPrime)
+  }
+
 }
