@@ -5,6 +5,7 @@ import (
   "errors"
   "fmt"
   "math"
+  "time"
 )
 
 func isPrimeWithContext(ctx context.Context, num int) (bool, error) {
@@ -29,7 +30,7 @@ func isPrimeWithContext(ctx context.Context, num int) (bool, error) {
   return true, nil // Prime, no error
 }
 func main() {
-  num := 177777777
+  num := 2147483647
 
   // Create a context with no deadline (effectively infinite)
   ctx := context.Background()
@@ -40,4 +41,25 @@ func main() {
   } else {
     fmt.Println(num, "is prime:", isPrime)
   }
+
+  b := make(chan bool)
+  go func(num int) {
+       limit := int(math.Sqrt(float64(num)))
+       for i := 2; i < limit; i++ {
+          if num%i == 0 {
+            b <- false
+            break
+          }
+        }
+        b <- true
+   } (num)
+
+  ctx2, cancel := context.WithTimeout(context.Background(), time.Second)
+  defer cancel()
+  select {
+   case bb := <-b:
+      fmt.Println(num, "is prime:", bb)
+   case <-ctx2.Done():
+      fmt.Println("Timeout")
+   }
 }
