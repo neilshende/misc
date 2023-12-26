@@ -1,7 +1,7 @@
 package main
 
 import (
-  atomic "go.uber.org/atomic"
+  atomic "sync/atomic"
   "context"
   "errors"
   "fmt"
@@ -31,8 +31,8 @@ func isPrime(ctx context.Context, num int) (bool, error) {
 }
 
 func isPrimeV2(ctx context.Context, num int) (bool, error) {
-  var quit atomic.Value
-  quit.Store(false)
+  var quit int32
+  atomic.StoreInt32(&quit, 0)
   b := make(chan bool)
   go func(num int) {
        if num <= 1 {
@@ -41,7 +41,7 @@ func isPrimeV2(ctx context.Context, num int) (bool, error) {
        }
        limit := int(math.Sqrt(float64(num)))
        for i := 2; i <= limit; i++ {
-          if quit.Load().(bool) {
+          if atomic.LoadInt32(&quit) != 0 {
              return
           }
           if num%i == 0 {
@@ -56,7 +56,7 @@ func isPrimeV2(ctx context.Context, num int) (bool, error) {
    case bb := <-b:
       return bb, nil
    case <-ctx.Done():
-      quit.Store(true)
+      atomic.StoreInt32(&quit, 1)
       return false, errors.New("context cancelled")
    }
 }

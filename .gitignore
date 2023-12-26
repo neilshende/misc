@@ -1,3 +1,5 @@
 a.out*
 __*
 .DS_Store
+go.mod
+go.sum
