@@ -26,7 +26,6 @@ func isPrime(ctx context.Context, num int) (bool, error) {
       }
     }
   }
-
   return true, nil // Prime, no error
 }
 
@@ -35,12 +34,13 @@ func isPrimeV2(ctx context.Context, num int) (bool, error) {
   go func(num int) {
        if num <= 1 {
           b <- false
+          return
        }
        limit := int(math.Sqrt(float64(num)))
        for i := 2; i < limit; i++ {
           if num%i == 0 {
             b <- false
-            break
+            return
           }
         }
         b <- true
