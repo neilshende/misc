@@ -37,4 +37,5 @@ func main() {
   ch <- "goodbye" //panic will be cought by recover of main thread.
   fmt.Println("exiting") // This statement will not be executed.
                   // We are toast, the recovery logic will not save us.
+                  // other than exiting with 0 instead of bt and 1.
 }
