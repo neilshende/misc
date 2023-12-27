@@ -32,12 +32,6 @@ func isPrime(ctx context.Context, num int) (bool, error) {
 func isPrimeV2(ctx context.Context, num int) (bool, error) {
   b := make(chan bool)
   go func(num int) {
-  defer func() {
-        if r := recover(); r != nil {
-            fmt.Println("Panic recovered:", r)
-            // Handle the panic or log it
-        }
-    }()
        if num <= 1 {
           b <- false
           return
@@ -56,7 +50,6 @@ func isPrimeV2(ctx context.Context, num int) (bool, error) {
    case bb := <-b:
       return bb, nil
    case <-ctx.Done():
-      close(b)
       return false, errors.New("context cancelled")
    }
 }
@@ -83,6 +76,4 @@ func main() {
   } else {
     fmt.Println(num, "is prime:", isPrime)
   }
-  time.Sleep(5*time.Second)
-  fmt.Println("exiting")
 }
