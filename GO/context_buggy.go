@@ -6,6 +6,7 @@ import (
   "fmt"
   "math"
   "time"
+  "runtime"
 )
 
 func isPrime(ctx context.Context, num int) (bool, error) {
@@ -76,4 +77,9 @@ func main() {
   } else {
     fmt.Println(num, "is prime:", isPrime)
   }
+  time.Sleep(time.Second)
+// Print all running goroutines
+    buf := make([]byte, 1<<20)
+    runtime.Stack(buf, true)
+    fmt.Println("Running goroutines:\n", string(buf))
 }
