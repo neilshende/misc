@@ -74,8 +74,8 @@ func main() {
   }
 
   num = 2147483647
-  // Create a context with timeout of one second.
-  ctx2, cancel := context.WithTimeout(context.Background(), time.Second/1000000)
+  // Create a context with timeout of one 100 microsecond.
+  ctx2, cancel := context.WithTimeout(context.Background(), time.Second/10000)
   defer cancel()
   isPrime, err = isPrimeV2(ctx2, num)
   if err != nil {
