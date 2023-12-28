@@ -50,18 +50,19 @@ func main() {
 	c := pb.NewGreeterClient(conn)
 
 	// Contact the server and print out its response.
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 	r, err := c.SayHello(ctx, &pb.HelloRequest{Name: *name})
 	if err != nil {
-		log.Fatalf("could not greet: %v", err)
+		log.Printf("could not greet: %v", err)
+	} else {
+		log.Printf("Greeting: %s", r.GetMessage())
 	}
-	log.Printf("Greeting: %s", r.GetMessage())
 
 	echan := make(chan error)
 	rchan := make(chan *pb.HelloReply)
 	go func () {
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 		defer cancel()
 		r, e := c.SayHello(ctx, &pb.HelloRequest{Name: "Async"})
 		echan <- e
@@ -74,7 +75,7 @@ func main() {
 		log.Printf("Greeting: %s", ra.GetMessage())
 	}
 
-	ctx2, cancel2 := context.WithTimeout(context.Background(), time.Second)
+	ctx2, cancel2 := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel2()
 	r, err = c.SayHelloAgain(ctx2, &pb.HelloRequest{Name: "Fail"})
 	if err != nil {
@@ -83,7 +84,7 @@ func main() {
 		log.Printf("Greeting: %s", r.GetMessage())
 	}
 
-  ctx3, cancel3 := context.WithTimeout(context.Background(), 30*time.Second)
+  ctx3, cancel3 := context.WithTimeout(context.Background(), 60*time.Second)
   defer cancel3()
   // Make the asynchronous RPC call
   stream, err := c.SayHelloStream(ctx3)
