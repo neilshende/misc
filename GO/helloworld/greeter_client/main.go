@@ -24,6 +24,7 @@ import (
 	"flag"
 	"log"
 	"time"
+	"strconv"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -38,6 +39,11 @@ var (
 	addr = flag.String("addr", "localhost:50051", "the address to connect to")
 	name = flag.String("name", defaultName, "Name to greet")
 )
+
+type async struct {
+	err error
+	reply *pb.HelloReply
+}
 
 func main() {
 	flag.Parse()
@@ -59,21 +65,30 @@ func main() {
 		log.Printf("Greeting: %s", r.GetMessage())
 	}
 
-	echan := make(chan error)
-	rchan := make(chan *pb.HelloReply)
-	go func () {
+	achan := make(chan async, 100)
+for i:=1; i<101; i++ {
+	go func (myi int) {
 		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 		defer cancel()
-		r, e := c.SayHello(ctx, &pb.HelloRequest{Name: "Async"})
-		echan <- e
-		rchan <- r
-	} ()
-	ea, ra := <-echan, <-rchan
-	if ea != nil {
-		log.Printf("Async call fail: %v", ea)
+		r, e := c.SayHello(ctx, &pb.HelloRequest{Name: "Async"+strconv.Itoa(myi)})
+		achan <- async{err:e, reply:r}
+	} (i)
+}
+b := 0
+for {
+	a := <-achan
+	if a.err != nil {
+		log.Printf("Async call fail: %v", a.err)
 	} else {
-		log.Printf("Greeting: %s", ra.GetMessage())
+		log.Printf("Greeting: %s", a.reply.GetMessage())
 	}
+	b++
+	if b>=100 {
+		log.Printf("received 100")
+		break
+	}
+}
+
 
 	ctx2, cancel2 := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel2()
