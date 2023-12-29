@@ -48,13 +48,13 @@ type server struct {
 func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
 	log.Printf("Received: %v", in.GetName())
 	time.Sleep(5*time.Second)
-	return &pb.HelloReply{Message: "Hello " + in.GetName()}, nil
+	return &pb.HelloReply{Message:time.Now().String() + " Hello " + in.GetName()}, nil
 }
 
 func (s *server) SayHelloAgain(ctx context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
 	log.Printf("Received: %v", in.GetName())
 	time.Sleep(5*time.Second)
-	return &pb.HelloReply{Message: "Hello again " + in.GetName()}, nil
+	return &pb.HelloReply{Message:time.Now().Format(time.RFC3339) + " Hello again " + in.GetName()}, nil
 }
 
 func (s *server) SayHelloStream(stream pb.Greeter_SayHelloStreamServer) error {
@@ -71,7 +71,7 @@ func (s *server) SayHelloStream(stream pb.Greeter_SayHelloStreamServer) error {
     go func(myreq *pb.HelloRequest) {
 	// Process the request and send a response
 	log.Printf("Received request: %v", myreq.Name)
-	resp := pb.HelloReply{Message: "Hello " + myreq.Name + "!"}
+	resp := pb.HelloReply{Message: time.Now().Format(time.RFC3339) + " Hello " + myreq.Name + "!"}
 	if err := stream.Send(&resp); err != nil {
 		errchan <- err
 	}
