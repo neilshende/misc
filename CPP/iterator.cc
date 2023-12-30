@@ -42,6 +42,12 @@ public:
           it++;
        }
     }
+    // std::move friendly copy construnctor
+    MyClass(MyClass&& other) : data(other.data), size(other.size) {// Move for rvalues
+        other.data = nullptr;  // Invalidate source object to prevent double-free
+        other.size = 0;
+    }
+
     // Assignment operator
     MyClass& operator=(const MyClass& other) {
         if (this != &other) {  // Check for self-assignment
@@ -94,5 +100,8 @@ int main() {
     }
     std::cout << std::endl;
 
-    std::cout << copyClass;
+    MyClass<int> moveClass = std::move(copyClass);
+    std::cout << "empty object: " << copyClass;
+
+    std::cout << "moved object: " << moveClass;
 }
