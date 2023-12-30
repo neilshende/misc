@@ -43,13 +43,13 @@ public:
        }
     }
     // Assignment operator
-    MyClass& operator=(MyClass& other) {
+    MyClass& operator=(const MyClass& other) {
         if (this != &other) {  // Check for self-assignment
             delete [] data;
             size = other.size;
             data = new T[size];
             iterator it = begin();
-            for(T value : other) {
+            for(T value : const_cast<MyClass &>(other)) {
                *it = value;
                it++;
             }
@@ -57,8 +57,8 @@ public:
         return *this;
     }
     // Overloaded operator<< for MyClass
-    friend std::ostream& operator<<(std::ostream& os, MyClass& obj) {
-        for (T value : obj) {
+    friend std::ostream& operator<<(std::ostream& os, const MyClass& obj) {
+        for (T value : const_cast<MyClass &>(obj)) {
            os << value << " ";
         }
         os << "\n";
