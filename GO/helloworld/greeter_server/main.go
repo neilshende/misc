@@ -99,9 +99,13 @@ func main() {
                         signal := <-sigchnl
                         fmt.Println(time.Now().Format(time.RFC3339), " Signal received:", signal.String())
                         gracechnl <- true
-                        <-waitchnl
-                        fmt.Println(time.Now().Format(time.RFC3339), " grpc server shutdown complete, exiting")
-                        os.Exit(0)
+                        select {
+                        case <-waitchnl:
+                           log.Printf("grpc server shutdown complete, exiting")
+                           os.Exit(0)
+                        case <-time.After(60*time.Second):
+                           log.Fatalf("grpc server shutdown timeout, aborting")
+                        }
                 }
         }()
 
