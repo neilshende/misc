@@ -52,9 +52,11 @@ public:
     // Assignment operator
     MyClass& operator=(const MyClass& other) {
         if (this != &other) {  // Check for self-assignment
-            delete [] data;
+            if (size < other.size) {
+               delete [] data;
+               data = new T[other.size];
+            }
             size = other.size;
-            data = new T[size];
             iterator it = begin();
             for(T value : const_cast<MyClass &>(other)) {
                *it = value;
