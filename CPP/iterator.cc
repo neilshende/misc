@@ -28,8 +28,8 @@ public:
     };
 
     // Begin and end iterators for the class
-    iterator begin() { return (&data[0]); }
-    iterator end() { return (&data[size]); }
+    iterator begin() { return iterator(&data[0]); }
+    iterator end() { return iterator(&data[size]); }
 };
 
 int main() {
