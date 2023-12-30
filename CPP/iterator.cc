@@ -43,7 +43,8 @@ public:
        }
     }
     // std::move friendly copy construnctor
-    MyClass(MyClass&& other) : data(other.data), size(other.size) {// Move for rvalues
+    //           this version of c++ does not like "noexcept" specifier.
+    MyClass(MyClass&& other) /*noexcept*/ : data(other.data), size(other.size) {// Move for rvalues
         other.data = nullptr;  // Invalidate source object to prevent double-free
         other.size = 0;
     }
