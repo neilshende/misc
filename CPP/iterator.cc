@@ -1,5 +1,5 @@
 #include <iostream>
-#include <iterator>
+//#include <iterator>
 
 // Sample class to iterate over
 template <typename T>
@@ -12,7 +12,8 @@ public:
     ~MyClass() { delete [] data;}
 
     // Define the iterator type as a nested class
-    class iterator : public std::iterator<std::forward_iterator_tag, T> {
+    //class iterator : public std::iterator<std::forward_iterator_tag, T> {
+    class iterator {
     public:
         iterator(T *it) : current(it) {}
 
