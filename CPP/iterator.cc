@@ -1,4 +1,5 @@
 #include <iostream>
+#include <memory>
 //#include <iterator>
 
 // Sample class to iterate over
@@ -107,4 +108,14 @@ int main() {
     std::cout << "empty object: " << copyClass;
 
     std::cout << "moved object: " << moveClass;
+
+    std::shared_ptr<MyClass<int> > obj1 = std::make_shared<MyClass<int> >(50);
+    std::shared_ptr<MyClass<int> > obj2 = obj1;  // Create another shared_ptr to the same object
+
+    for (MyClass<int>::iterator it = obj1->begin(); it < obj1->end(); it++) {
+        *it = i++;
+    }
+    std::cout << "same as obj1: " << *obj2;
+
+    retrun 0;
 }
