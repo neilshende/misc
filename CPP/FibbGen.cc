@@ -5,7 +5,7 @@ class fsg {
 			a=b=1;
 		}
 		~fsg() {}
-		long next() {
+		long operator() () {
 			auto r=a;
 			a=b;
 			b=a+b;
@@ -25,7 +25,7 @@ long FibGen() {
 }
 int main() {
 	fsg FS;
-	for (auto f = FS.next(); f>0; f = FS.next()) {
+	for (auto f = FS(); f>0; f = FS()) {
 		std::cout << f << std::endl;
 	}
 	for (auto f = FibGen(); f>0; f = FibGen()) {
