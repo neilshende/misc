@@ -8,7 +8,7 @@ class fsg {
 		long operator() () {
 			auto r=a;
 			a=b;
-			b=a+b;
+			b=r+b;
 			return r;
 		}
 	private:
@@ -18,10 +18,10 @@ class fsg {
 long FibGen() {
   static long a=1;
   static long b=1;
-  auto ret = a;
+  auto r = a;
   a=b;
-  b=a+b;
-  return ret;
+  b=r+b;
+  return r;
 }
 int main() {
 	fsg FS;
