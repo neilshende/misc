@@ -117,5 +117,5 @@ int main() {
     }
     std::cout << "same as obj1: " << *obj2;
 
-    retrun 0;
+    return 0;
 }
