@@ -20,7 +20,7 @@ public:
 
         int& operator*() const { return *current; }
         iterator& operator++() { ++current; return *this; }
-        iterator& operator++(int) {iterator t=*this; ++current; return t; }
+        iterator& operator++(int) {iterator t(*this); ++current; return t; }
         bool operator==(const iterator& other) const { return current == other.current; }
         bool operator!=(const iterator& other) const { return !(*this == other); }
         bool operator<(const iterator& other) const { return current < other.current; }
@@ -44,8 +44,7 @@ public:
        }
     }
     // std::move friendly copy construnctor
-    //           this version of c++ does not like "noexcept" specifier.
-    MyClass(MyClass&& other) /*noexcept*/ : data(other.data), size(other.size) {// Move for rvalues
+    MyClass(MyClass&& other) noexcept : data(other.data), size(other.size) {// Move for rvalues
         other.data = nullptr;  // Invalidate source object to prevent double-free
         other.size = 0;
     }
@@ -53,15 +52,14 @@ public:
     // Assignment operator
     MyClass& operator=(const MyClass& other) {
         if (this != &other) {  // Check for self-assignment
-            if (size < other.size) {
+            if (size < other.size) { // reuse data otherwise.
                delete [] data;
                data = new T[other.size];
             }
             size = other.size;
             iterator it = begin();
             for(T value : const_cast<MyClass &>(other)) {
-               *it = value;
-               it++;
+               *it++ = value; // *it = value; ++it;
             }
         }
         return *this;
