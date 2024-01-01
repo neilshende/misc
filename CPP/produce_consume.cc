@@ -10,11 +10,13 @@ std::condition_variable produce,consume;
 int cargo = 0;     // shared value by producers and consumers
 
 void consumer (int cid) {
+  for (int i=0;i<20;i++) {
   std::unique_lock<std::mutex> lck(mtx);
   while (cargo==0) consume.wait(lck);
   std::cout << cid << ":" <<cargo << '\n';
   cargo=0;
   produce.notify_one();
+  }
 }
 
 void producer (int id) {
@@ -26,17 +28,24 @@ void producer (int id) {
 
 int main ()
 {
-  std::thread consumers[10],producers[10];
+  std::thread consumers[10],producers[100];
   // spawn 10 consumers and 10 producers:
-  for (int i=0; i<10; ++i) {
+  for (int i=0; i<5; ++i) {
     consumers[i] = std::thread(consumer, i);
+  }
+
+  for (int i=0; i<100; ++i) {
     producers[i] = std::thread(producer,i+10);
   }
 
   // join them back:
-  for (int i=0; i<10; ++i) {
-    producers[i].join();
+  for (int i=0; i<5; ++i) {
     consumers[i].join();
+  }
+
+  // join them back:
+  for (int i=0; i<100; ++i) {
+    producers[i].join();
   }
 
   return 0;
