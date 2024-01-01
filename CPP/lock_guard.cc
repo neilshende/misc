@@ -1,12 +1,21 @@
 #include <iostream>
 #include <mutex>
+class MyClass {
+public:
+    void lock() { std::cout << "in lock()\n"; mtx.lock(); }
+    void unlock() { std::cout << "in unlock()\n"; mtx.unlock(); }
+
+private:
+    std::mutex mtx;  // Nested mutex for synchronization
+};
 
 int main() {
-    std::mutex mtx;
+    MyClass mtx; // std::mutex mtx is used normally
+                 //   but for better understanding use MyClass
 
     // Acquire the lock using a scope guard to ensure automatic unlocking
     {
-        std::lock_guard<std::mutex> lock(mtx); // Lock the mutex upon construction
+        std::lock_guard<decltype(mtx)> scoped_lock(mtx); // Lock the mutex upon construction
 
         // Perform operations within the critical section
         std::cout << "Accessing shared resource..." << std::endl;
