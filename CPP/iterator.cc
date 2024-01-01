@@ -30,8 +30,8 @@ public:
     };
 
     // Begin and end iterators for the class
-    iterator begin() { return iterator(&data[0]); }
-    iterator end() { return iterator(&data[size]); }
+    iterator begin() { return iterator(data); }
+    iterator end() { return iterator(data+size); }
     // Copy constructor
     MyClass(MyClass& other) {
        size = other.size;
@@ -115,6 +115,7 @@ int main() {
     for (MyClass<int>::iterator it = obj1->begin(); it < obj1->end(); it++) {
         *it = i++;
     }
+    std::cout << "        obj1: " << *obj1;
     std::cout << "same as obj1: " << *obj2;
 
     return 0;
