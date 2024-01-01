@@ -7,15 +7,14 @@
 
 std::condition_variable cv;
 std::mutex mtx;
-
 int value;
 
 void read_value() {
   for (;;) {
-  std::cin >> value;
-  std::lock_guard<decltype(mtx)> lck(mtx);
-  cv.notify_one();
-  if (value==911) break;
+     std::cin >> value;
+     std::lock_guard<decltype(mtx)> lck(mtx);
+     cv.notify_one();
+     if (value==911) break;
   }
 }
 
@@ -25,12 +24,12 @@ int main ()
   std::thread th (read_value);
 
   for (;;) {
-  std::unique_lock<decltype(mtx)> lck(mtx);
-  while (cv.wait_for(lck,std::chrono::seconds(1))==std::cv_status::timeout) {
-    std::cout << '.' << std::flush;// << std::endl;
-  }
-  std::cout << "You entered: " << value << '\n';
-  if (value==911) break;
+     std::unique_lock<decltype(mtx)> lck(mtx);
+     while (cv.wait_for(lck,std::chrono::seconds(1))==std::cv_status::timeout) {
+        std::cout << '.' << std::flush;
+     }
+     std::cout << "You entered: " << value << '\n';
+     if (value==911) break;
   }
 
   th.join();
