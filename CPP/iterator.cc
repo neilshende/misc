@@ -1,5 +1,6 @@
 #include <iostream>
 #include <memory>
+#include <initializer_list>  // std::initializer_list
 //#include <iterator>
 
 // Sample class to iterate over
@@ -43,6 +44,16 @@ public:
           it++;
        }
     }
+    // initializer_list constructor
+    MyClass(std::initializer_list<T> list) {
+       size = list.size();
+       data = new T[size];
+       int i=0;
+       for (T item: list) {
+          data[i++] = item;
+        }
+    }
+
     // std::move friendly copy construnctor
     MyClass(MyClass&& other) noexcept : data(other.data), size(other.size) {// Move for rvalues
         other.data = nullptr;  // Invalidate source object to prevent double-free
@@ -116,5 +127,7 @@ int main() {
     std::cout << "        obj1: " << *obj1;
     std::cout << "same as obj1: " << *obj2;
 
+    MyClass<int> m{1,2,3,4};
+    std::cout << "m initialisted with list :" << m;
     return 0;
 }
