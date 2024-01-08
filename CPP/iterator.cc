@@ -44,6 +44,7 @@ public:
           it++;
        }
     }
+
     // initializer_list constructor
     MyClass(std::initializer_list<T> list) {
        size = list.size();
@@ -54,7 +55,7 @@ public:
         }
     }
 
-    // std::move friendly copy construnctor
+    // std::move friendly copy constructor
     MyClass(MyClass&& other) noexcept : data(other.data), size(other.size) {// Move for rvalues
         other.data = nullptr;  // Invalidate source object to prevent double-free
         other.size = 0;
@@ -75,6 +76,17 @@ public:
         }
         return *this;
     }
+
+    // operator[]
+   T& operator[](int index) {
+       if (index<0 || index >=size) {
+           //harakiri
+           std::cout << "FATAL: invalid index: " << index << " for size: " << size << std::endl;
+           exit(1);
+       }
+       return *(data+index);
+    }
+
     // Overloaded operator<< for MyClass
     friend std::ostream& operator<<(std::ostream& os, const MyClass& obj) {
         for (T value : const_cast<MyClass &>(obj)) {
@@ -129,5 +141,8 @@ int main() {
 
     MyClass<int> m{1,2,3,4};
     std::cout << "m initialisted with list :" << m;
+
+    std::cout << "m3 :" <<  m[3] << std::endl; 
+    m[4] = 5;//abort
     return 0;
 }
