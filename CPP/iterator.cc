@@ -19,7 +19,7 @@ public:
     public:
         iterator(T *it) : current(it) {}
 
-        int& operator*() const { return *current; }
+        T& operator*() const { return *current; }
         iterator& operator++() { ++current; return *this; }
         iterator& operator++(int) {iterator t(*this); ++current; return t; }
         bool operator==(const iterator& other) const { return current == other.current; }
