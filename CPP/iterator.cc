@@ -139,10 +139,10 @@ int main() {
     std::cout << "        obj1: " << *obj1;
     std::cout << "same as obj1: " << *obj2;
 
-    MyClass<int> m{1,2,3,4};
+    MyClass<std::string> m{"a1","b2","c3","d4"};
     std::cout << "m initialisted with list :" << m;
 
     std::cout << "m3 :" <<  m[3] << std::endl; 
-    m[4] = 5;//abort
+    m[4] = "e5";//abort
     return 0;
 }
