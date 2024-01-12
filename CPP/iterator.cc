@@ -143,6 +143,10 @@ int main() {
     std::cout << "m initialisted with list :" << m;
 
     std::cout << "m3 :" <<  m[3] << std::endl; 
-    m[4] = "e5";//abort
+    //m[4] = "e5";//abort
+    std::string a = "Hello world";
+    std::string b = std::move(a);
+    //auto &b = a;
+    std::cout << "a is :" << a <<  ":\n";
     return 0;
 }
