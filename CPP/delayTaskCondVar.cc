@@ -39,19 +39,22 @@ private:
         running = false;
         condition.notify_all();
         taskThread.join();
-        std::cout << "queue empty? " << taskQueue.size() << std::endl;
+        std::cout << "queue empty? " << taskQueue.size() << " looped " << loopCount << std::endl;
     }
 
     void processTasks() {
+        loopCount = 0;
         while (running) {
             {
+                ++loopCount;
                 std::unique_lock<std::mutex> lock(queueMutex);
-                condition.wait(lock, [this] {
-                                               return (!running ||
-                                                      (!taskQueue.empty()
-                                                       /*&& taskQueue.top().scheduledTime <= std::chrono::steady_clock::now()*/));
-                                            }
-                              );
+                condition.wait_until(lock, std::chrono::steady_clock::now() + std::chrono::milliseconds(500),
+                    [this] {
+                       return (!running ||
+                             (!taskQueue.empty()
+                              && taskQueue.top().scheduledTime <= std::chrono::steady_clock::now()
+                          ));
+                    });
                 if (!running) return;
                 if (!taskQueue.empty() && taskQueue.top().scheduledTime <= std::chrono::steady_clock::now())
                 {
@@ -69,6 +72,7 @@ private:
     std::thread taskThread;
     std::atomic<bool> running;
     std::condition_variable condition;
+    long loopCount;
 };
 
 
@@ -97,7 +101,7 @@ int main() {
     executor.enqueueTask([] { std::cout << "Task 8 (delay 8s)\n"; }, std::chrono::milliseconds(8000));
     std::this_thread::sleep_for(std::chrono::seconds(14));
     executor.enqueueTask([] { std::cout << "Task 9 (delay 8s)\n"; }, std::chrono::milliseconds(8000));
-    std::this_thread::sleep_for(std::chrono::seconds(140));
+    std::this_thread::sleep_for(std::chrono::seconds(16));
     std::cout << "Called Stop\n";
 
     return 0;
