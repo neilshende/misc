@@ -35,12 +35,14 @@ private:
     ~DelayedTaskExecutor() {
         running = false;
         taskThread.join();
-        std::cout << "Done\n";
+        std::cout << "queue size " << taskQueue.size() << " looped " << loopCount << std::endl;
     }
 
     void processTasks() {
+        loopCount=0;
         while (running) {
             {
+                ++loopCount;
                 std::unique_lock<std::mutex> lock(queueMutex);
                 if (!taskQueue.empty() && taskQueue.top().scheduledTime <= std::chrono::steady_clock::now()) {
                     auto task = std::move(taskQueue.top());
@@ -49,7 +51,7 @@ private:
                     task.task();
                 }
             }
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
     }
 
@@ -57,6 +59,7 @@ private:
     std::mutex queueMutex;
     std::thread taskThread;
     std::atomic<bool> running;
+    long loopCount;
 };
 
 
@@ -67,7 +70,6 @@ bool operator>(const TaskEntry& a, const TaskEntry& b) {
 int main() {
     std::cout << "Starting task processing...\n";
     DelayedTaskExecutor &executor = DelayedTaskExecutor::getInstance();
-    //executor.start();
     std::cout << "**Main thread continues execution and can enqueue tasks anytime**\n";
 
     // Test cases:
@@ -76,14 +78,19 @@ int main() {
     executor.enqueueTask([] { std::cout << "Task 3 (delay 1s)\n"; }, std::chrono::seconds(1));
     executor.enqueueTask([] { std::cout << "Task 4 (delay 0.5s)\n"; }, std::chrono::milliseconds(500));
     std::this_thread::sleep_for(std::chrono::seconds(1));
-    executor.enqueueTask([] { std::cout << "Task 5 (delay 1/2 s)\n"; }, std::chrono::milliseconds(5000));
+    executor.enqueueTask([] { std::cout << "Task 5 (delay 5s)\n"; }, std::chrono::seconds(5));
     std::this_thread::sleep_for(std::chrono::seconds(1));
     executor.enqueueTask([] { std::cout << "Task 6 (delay 5000s)\n"; }, std::chrono::seconds(5000));
 
     std::this_thread::sleep_for(std::chrono::seconds(10));
-    executor.enqueueTask([] { std::cout << "Task 7 (delay 7s)\n"; }, std::chrono::seconds(7));
+    executor.enqueueTask([] { std::cout << "Task 7 (delay 7s)\n"; }, std::chrono::milliseconds(7000));
     std::this_thread::sleep_for(std::chrono::seconds(10));
+    executor.enqueueTask([] { std::cout << "Task 8 (delay 8s)\n"; }, std::chrono::milliseconds(8000));
+    std::this_thread::sleep_for(std::chrono::seconds(14));
+    executor.enqueueTask([] { std::cout << "Task 9 (delay 8s)\n"; }, std::chrono::milliseconds(8000));
+    std::this_thread::sleep_for(std::chrono::seconds(16));
     std::cout << "Called Stop\n";
 
     return 0;
 }
+

@@ -39,7 +39,7 @@ private:
         running = false;
         condition.notify_all();
         taskThread.join();
-        std::cout << "queue empty? " << taskQueue.size() << " looped " << loopCount << std::endl;
+        std::cout << "queue size " << taskQueue.size() << " looped " << loopCount << std::endl;
     }
 
     void processTasks() {
