@@ -44,11 +44,12 @@ private:
             {
                 ++loopCount;
                 std::unique_lock<std::mutex> lock(queueMutex);
-                if (!taskQueue.empty() && taskQueue.top().scheduledTime <= std::chrono::steady_clock::now()) {
+                while (running && !taskQueue.empty() && taskQueue.top().scheduledTime <= std::chrono::steady_clock::now()) {
                     auto task = std::move(taskQueue.top());
                     taskQueue.pop();
                     lock.unlock();
                     task.task();
+                    lock.lock();
                 }
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
