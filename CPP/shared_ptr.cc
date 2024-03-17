@@ -38,14 +38,26 @@ int main()
     std::cout << "In main: ref count = " << myInt.use_count() << std::endl;
     ReferencePtr(myInt);
     std::cout << "In main: ref count = " << myInt.use_count() << std::endl;
+    std::cout << "can deref the ptr now = " << *myInt << std::endl;
     MovePtr(std::move(myInt));
     std::cout << "In main: ref count = " << myInt.use_count() << std::endl;
+    //std::cout << "can't deref the ptr now = " << *myInt << std::endl;
 
     // since myInt was moved to MovePtr and fell out of scope on return (was destroyed),
     // we have to reinitialize myInt
     myInt.reset();
     myInt = std::make_shared<int>(5);
 
-
+    std::shared_ptr<int> myCopyInt(myInt);
+    std::cout << "In main: ref count = " << myCopyInt.use_count() << std::endl;
+    myInt.reset();
+    std::shared_ptr<int> myCopyInt2(myInt);
+    std::cout << "In main: ref count = " << myCopyInt.use_count() << std::endl;
+    myCopyInt.reset(); //shared_ptr is reset, not deleted.
+    myCopyInt.reset(); //unlike delete you can reset again without double free error.
+    int *x=new int(5);
+    delete x;
+    //delete x;
+    std::cout << "In main: ref count = " << myCopyInt.use_count() << std::endl;
     return 0;
 }
