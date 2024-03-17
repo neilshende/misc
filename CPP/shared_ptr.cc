@@ -6,8 +6,12 @@
 class foo {
 public:
   ~foo() {std::cout << "end foo" << std::endl;
+         x=-911;
          }
-  foo() {}
+  foo() {x=100;}
+  void method() {std::cout << "foo method " << x << std::endl;}
+private:
+  int x;
 };
 
 void CopyPtr(std::shared_ptr<int> myInt)
@@ -62,12 +66,14 @@ int main()
     myCopyInt.reset(); //unlike delete you can reset again without double free error.
     int *x=new int(5);
     delete x;
-    //delete x;
+    //delete x;   /*SIGSEGV*/
     std::cout << "In main: ref count = " << myCopyInt.use_count() << std::endl;
 
     std::shared_ptr<foo> fp = std::make_shared<foo>();
+    fp->method();
     std::cout << "fp reset" << std::endl;
     fp.reset();
     std::cout << "fp reset done" <<std::endl;
+    //fp->method();  /*SIGSEGV*/
     return 0;
 }
