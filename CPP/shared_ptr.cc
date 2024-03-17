@@ -3,7 +3,12 @@
 #include <chrono>
 #include <ctime>
 #include <random>
-
+class foo {
+public:
+  ~foo() {std::cout << "end foo" << std::endl;
+         }
+  foo() {}
+};
 
 void CopyPtr(std::shared_ptr<int> myInt)
 {
@@ -59,5 +64,10 @@ int main()
     delete x;
     //delete x;
     std::cout << "In main: ref count = " << myCopyInt.use_count() << std::endl;
+
+    std::shared_ptr<foo> fp = std::make_shared<foo>();
+    std::cout << "fp reset" << std::endl;
+    fp.reset();
+    std::cout << "fp reset done" <<std::endl;
     return 0;
 }
