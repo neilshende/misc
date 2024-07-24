@@ -11,7 +11,13 @@ f3 = gzip.open(Read3, 'wb')
 line1 = file1.readline()
 
 while line1:
-    out2 = bytes(((str(line1).split(' ')[1]).split(',')[0]) + "\n", encoding = 'utf-8')
+    #out2 = bytes(((str(line1).split(' ')[1]).split(',')[0]) + "\n", encoding = 'utf-8')
+    sl = str(line1)
+    ss1 = sl.split(' ')[1]
+    ss2 = ss1.split(',')[0]
+    ss2n = ss2 + "\n"
+    out2 = bytes(ss2n, encoding = 'utf-8')
+
     line2 = file1.readline()
     line3 = file1.readline()
     line4 = file1.readline()
