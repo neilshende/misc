@@ -4,3 +4,4 @@ __*
 go.mod
 go.sum
 *swp
+*dSYM/

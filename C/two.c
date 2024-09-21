@@ -8,7 +8,7 @@ double i = b;
 again:
 double a = pow(b, i);
 printf("In %d steps, answer is %75.75f\n",n, a);
-if (a != two) {
+if (a != two /*&& n<50*/) {
     n++;
     i = a;
     goto again;
