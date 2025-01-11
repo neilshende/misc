@@ -64,7 +64,7 @@ public:
     // Assignment operator
     MyClass& operator=(const MyClass& other) {
         if (this != &other) {  // Check for self-assignment
-            if (size < other.size) { // reuse data otherwise.
+            if (size != other.size) { // reuse data otherwise.
                delete [] data;
                data = new T[other.size];
             }
