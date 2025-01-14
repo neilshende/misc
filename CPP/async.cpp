@@ -1,15 +1,24 @@
 #include <iostream>
 #include <semaphore>
+#include <string>
 const long MAX_WRITE_SIZE = 4*12024*1024;
 const long MAX_MEM = 100*1024*1024;
 void my_write(void *buff, int size, int offset, std::function<void()> done_cb) {
 }
 int my_read(void *buf, int max) {
+  return 0;
 }
 int main() {
   bool eof = false;
   long goffset;
   int max_pending_writes = MAX_MEM/MAX_WRITE_SIZE;
+  std::string foo("");
+  if (foo == "") std::cout << "empty\n";
+  if (foo.empty()) std::cout << "empty()\n";
+  std::string foo2;
+  if (foo2 == "") std::cout << "empty\n";
+  if (foo2.empty()) std::cout << "empty()\n";
+#if 0
   std::counting_semaphore s(max_pending_writes);
   while (true) {
     long size = 0, rc=0, offset=0; 
@@ -42,5 +51,6 @@ int main() {
       break;
     }
   }
+#endif
   return 0;
 }
