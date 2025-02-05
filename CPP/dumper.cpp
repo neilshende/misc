@@ -5,6 +5,7 @@
 #include <thread>
 #include <filesystem>
 #include <mutex>
+#include <shared_mutex>
 #include <condition_variable>
 #include <chrono>
 #include <atomic>
@@ -18,7 +19,7 @@
 
 namespace fs = std::filesystem;
 
-std::mutex filename_mutex;
+std::shared_mutex filename_mutex;
 std::set<std::string> found_filenames;
 std::atomic<bool> running(true);
 std::condition_variable cv;
@@ -37,7 +38,7 @@ while (1) {
                 std::string filename_str = filename.string(); // Convert to string
 
                 if (filename_str.find(substring) != std::string::npos) {
-                    std::lock_guard<std::mutex> lock(filename_mutex);
+                    std::unique_lock<std::shared_mutex> lock(filename_mutex);
                     found_filenames.insert(entry.path());
                 }
             }
@@ -59,11 +60,15 @@ void dumper_thread() {
         if (!running) return;
 
         {
-            std::lock_guard<std::mutex> lock(filename_mutex);
+            {
+            std::shared_lock<std::shared_mutex> lock(filename_mutex);
             for (const auto& filename : found_filenames) {
                 std::cout << filename << std::endl;
-            }
+            }}
+            {
+            std::unique_lock<std::shared_mutex> lock(filename_mutex);
             found_filenames.clear();
+            }
         }
     }
 }
@@ -106,13 +111,17 @@ int main(int argc, char* argv[]) {
         std::cin >> command;
         if (command == "dump") {
             {
+                {
                 std::cout << "-----Dump comand received.\n";
-                std::lock_guard<std::mutex> lock(filename_mutex);
+                std::shared_lock<std::shared_mutex> lock(filename_mutex);
                 std::cout << "-----Dump comand locked the mutex.\n";
                 for (const auto& filename : found_filenames) {
                     std::cout << filename << std::endl;
-                }
+                }}
+                {
+                std::unique_lock<std::shared_mutex> lock(filename_mutex);
                 found_filenames.clear();
+                }
             }
         } else if (command == "exit") {
             running = false;
