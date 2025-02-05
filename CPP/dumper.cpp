@@ -26,30 +26,30 @@ std::condition_variable cv;
 std::mutex cv_mutex;
 
 void search_directory(const fs::path& dir, const std::string& substring) {
-while (1) {
-    if (!running) return;
+    while (1) {
+        if (!running) return;
 
-    try {
-        for (const auto& entry : fs::recursive_directory_iterator(dir)) {
-            if (!running) return;
+        try {
+            for (const auto& entry : fs::recursive_directory_iterator(dir)) {
+                if (!running) return;
 
-            if (entry.is_regular_file()) {
-                fs::path filename = entry.path().filename();
-                std::string filename_str = filename.string(); // Convert to string
+                if (entry.is_regular_file()) {
+                    fs::path filename = entry.path().filename();
+                    std::string filename_str = filename.string(); // Convert to string
 
-                if (filename_str.find(substring) != std::string::npos) {
-                    std::unique_lock<std::shared_mutex> lock(filename_mutex);
-                    found_filenames.insert(entry.path());
+                    if (filename_str.find(substring) != std::string::npos) {
+                        std::unique_lock<std::shared_mutex> lock(filename_mutex);
+                        found_filenames.insert(entry.path());
+                    }
                 }
             }
+        } catch (const std::exception& e) {
+            std::cerr << "Error accessing directory: " << e.what() << std::endl;
         }
-    } catch (const std::exception& e) {
-        std::cerr << "Error accessing directory: " << e.what() << std::endl;
-    }
         std::unique_lock<std::mutex> lock(cv_mutex);
         cv.wait_for(lock, std::chrono::seconds(1));
 
-}
+    }
 }
 
 void dumper_thread() {
@@ -61,13 +61,15 @@ void dumper_thread() {
 
         {
             {
-            std::shared_lock<std::shared_mutex> lock(filename_mutex);
-            for (const auto& filename : found_filenames) {
-                std::cout << filename << std::endl;
-            }}
+                std::shared_lock<std::shared_mutex> lock(filename_mutex);
+                for (const auto& filename : found_filenames) {
+                    std::cout << filename << std::endl;
+                }
+            }
+
             {
-            std::unique_lock<std::shared_mutex> lock(filename_mutex);
-            found_filenames.clear();
+                std::unique_lock<std::shared_mutex> lock(filename_mutex);
+                found_filenames.clear();
             }
         }
     }
@@ -112,15 +114,14 @@ int main(int argc, char* argv[]) {
         if (command == "dump") {
             {
                 {
-                std::cout << "-----Dump comand received.\n";
-                std::shared_lock<std::shared_mutex> lock(filename_mutex);
-                std::cout << "-----Dump comand locked the mutex.\n";
-                for (const auto& filename : found_filenames) {
-                    std::cout << filename << std::endl;
-                }}
+                    std::shared_lock<std::shared_mutex> lock(filename_mutex);
+                    for (const auto& filename : found_filenames) {
+                        std::cout << filename << std::endl;
+                    }
+                }
                 {
-                std::unique_lock<std::shared_mutex> lock(filename_mutex);
-                found_filenames.clear();
+                    std::unique_lock<std::shared_mutex> lock(filename_mutex);
+                    found_filenames.clear();
                 }
             }
         } else if (command == "exit") {
