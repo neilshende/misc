@@ -93,14 +93,14 @@ int main()
     ca.put(1,10);
     ca.put(2,20);
     ca.put(3,30);
-    cout << "gettign 1 " << ca.get(1) << endl;
+    cout << "get 1 " << ca.get(1) << endl;
     ca.put(4,40);
     ca.put(5,50);
     ca.display();
     cout << "-----" << endl;
     ca.put(6,60);
-    cout << "gettign 1 " << ca.get(1) << endl;
-    cout << "gettign 2 " << ca.get(2) << endl;
+    cout << "get 1 " << ca.get(1) << endl;
+    cout << "get 2 " << ca.get(2) << endl;
     ca.put(6,61);
     ca.put(7,70);
     ca.display();
