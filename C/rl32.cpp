@@ -26,7 +26,18 @@ int countSetBits(unsigned int n) {
    return b;
 }
 
-void helper(string &encoded, char *buf, int &i, int &j, int &n) {
+string rl32(char *buf, int len) {
+int i=0;
+int j=1;
+int n=1;
+string encoded = "";
+#if 0
+int max = std::numeric_limits<int>::max();
+#else
+int max = 9;
+#endif
+
+function<void()> helper = [&]() {
 #if 0
         encoded += ((char *)(&n))[0];
         encoded += ((char *)(&n))[1];
@@ -39,18 +50,7 @@ void helper(string &encoded, char *buf, int &i, int &j, int &n) {
         i=j;
         ++j;
         n=1;
-}
-
-string rl32(char *buf, int len) {
-int i=0;
-int j=1;
-int n=1;
-string encoded = "";
-#if 0
-int max = std::numeric_limits<int>::max();
-#else
-int max = 9;
-#endif
+};
 
 while(j < len) {
   if (buf[i] == buf[j]) {
@@ -58,13 +58,13 @@ while(j < len) {
         ++n;
         ++j;
      } else {
-        helper(encoded, buf, i, j, n);
+        helper();
      }
   } else {
-     helper(encoded, buf, i, j, n);
+     helper();
   }
 }
-helper(encoded, buf, i, j, n);
+helper();
 return encoded;
 }
 

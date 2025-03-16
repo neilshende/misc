@@ -75,8 +75,8 @@ node *reverse(node *head)
     node* next;
     while (current != NULL)
     {
-        next  = current->next;  
-        current->next = prev;   
+        next  = current->next;
+        current->next = prev;
         prev = current;
         current = next;
     }
@@ -84,6 +84,7 @@ node *reverse(node *head)
 }
 node * recreverse(node *curr, node *prev)
 {
+    if (curr == NULL) return NULL:
     if (curr->next == NULL) {
       curr->next = prev;
       return curr;
