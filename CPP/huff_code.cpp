@@ -2,6 +2,10 @@
 //  main.cpp
 //  Huffman
 //
+#include <iostream>
+#include <stdlib.h>
+#include <queue>
+#include <map>
 
 //#include<bits/stdc++.h>
 using namespace std;

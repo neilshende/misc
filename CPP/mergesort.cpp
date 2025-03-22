@@ -50,6 +50,8 @@ void merge(int array[], int const left, int const mid, int const right)
       indexOfSubArrayTwo++;
       indexOfMergedArray++;
    }
+   delete [] rightArray;
+   delete [] leftArray;
 }
 
 // begin is for left index and end is
