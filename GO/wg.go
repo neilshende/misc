@@ -27,7 +27,7 @@ func main() {
    if !ok {
       fmt.Printf("Not OK %s\n", strconv.Itoa(math.MaxInt64))
    } else {
-      fmt.Printf("V is \n", v)
+      fmt.Printf("V is %d\n", v)
    }
 
     var wg sync.WaitGroup

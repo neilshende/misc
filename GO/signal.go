@@ -28,7 +28,8 @@ func multiSignalHandler(signal os.Signal) {
 }
 
 func main() {
-int var x = 100
+var  x int = 100
+fmt.Println("x is ", x);
 	sigchnl := make(chan os.Signal, 1)
 	signal.Notify(sigchnl, os.Interrupt, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM) //we can add more sycalls.SIGQUIT etc.
 	exitchnl := make(chan int)
@@ -44,5 +45,4 @@ int var x = 100
 	exitcode := <-exitchnl
 	fmt.Println("Do we ever reach here?, and how?")
 	os.Exit(exitcode)
-int var x = 200
 }

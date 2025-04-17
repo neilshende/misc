@@ -13,7 +13,7 @@ import (
 	"os/signal"
 	"syscall"
 //	"runtime/debug"
-	"runtime/prof"
+//	"runtime/prof"
 )
 
 func main() {
@@ -42,7 +42,7 @@ func main() {
 		fmt.Println()
 		fmt.Println(sig)
 		fmt.Println("Now the stack traces.")
-		pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
+//		pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
 		done <- true
 	}()
 

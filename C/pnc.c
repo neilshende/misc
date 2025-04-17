@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <memory.h>
 #include <string.h>
-char x[] = "0123456789";
+char x[] = "0123";
 char y[sizeof(x)] = {0};
 int used[sizeof(x)] = {0};
 void combine(int start)
@@ -41,7 +41,7 @@ int xlen = strlen(x);
 int main(int argc, char *argv[])
 {
 permute();
-//printf("Now combine\n");
-//combine(0);
+printf("Now combine\n");
+combine(0);
 return 0;
 }

@@ -26,4 +26,17 @@ func main() {
     }
 
     quit <- true // Signal the goroutine to stop
+
+	// Create a context with a timeout.  You can also use context.WithCancel.
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel() // Ensure the cancel function is called to release resources.
+
+	fmt.Println("Starting...")
+
+	select {
+	case <-ctx.Done():
+		fmt.Println("Context canceled:", ctx.Err()) // Print the error from the context.
+	}
+
+	fmt.Println("Exiting.")
 }
