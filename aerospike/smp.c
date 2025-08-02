@@ -1,4 +1,3 @@
-#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -8,6 +7,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <pthread.h>
+#include <stddef.h>
 #include <ctype.h>
 
 uint64_t my_strtoull(char *field_start) {
@@ -29,12 +29,6 @@ typedef struct {
 void *sum_column_chunk(void *arg) {
     thread_arg_t *a = (thread_arg_t *)arg;
     char *p = a->start;
-
-    // Skip to start of next full line if not beginning of file
-    if (p != a->start && *(p - 1) != '\n') {
-        while (p < a->end && *p != '\n') p++;
-        if (p < a->end) p++;
-    }
 
     while (p < a->end) {
         char *line_end = memchr(p, '\n', a->end - p);
@@ -80,8 +74,10 @@ uint64_t sum_column(const char *path, int col) {
     if (data == MAP_FAILED) return 0;
 
     int num_threads = sysconf(_SC_NPROCESSORS_ONLN);
-    if (num_threads <= 0) num_threads = 1;
+    if (num_threads <= 1) num_threads = 4;
     if ((size_t)num_threads > size / 64) num_threads = size / 64;
+
+    printf("Num_threads = %d\n", num_threads);
 
     pthread_t threads[num_threads];
     thread_arg_t args[num_threads];
@@ -97,9 +93,20 @@ uint64_t sum_column(const char *path, int col) {
         } else {
             end = data + (i + 1) * chunk;
             while (end < data + size && *end != '\n') end++;
-            if (end < data + size) end++;  // include newline
+            //if (end < data + size) end++;  // include newline
         }
 
+        // For all except the first thread, advance start to next newline
+        if (i > 0) {
+           while (start < end && *(start) != '\n') {
+               start++;
+           }
+           //skip over newline
+           start++;
+        }
+
+        printf("%d start=%p end=%p\n", i, start, end);
+        printf("end ends at NL :%s\n", (*end=='\n'?"yes": "no"));
         args[i].start = start;
         args[i].end = end;
         args[i].col = col;
@@ -125,4 +132,6 @@ int main() {
     printf("Sum of column %d: %lu\n", col, result);
     return 0;
 }
+
+
 

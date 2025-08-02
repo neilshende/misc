@@ -9,12 +9,12 @@
 #include <ctype.h>
 
 uint64_t my_strtoull(char *field_start) {
-        uint64_t res =0;
-	while (isdigit(*field_start)) {
-		res = 10 * res + (*field_start) - '0';
-		++field_start;
-	}
-	return res;
+    uint64_t res =0;
+    while (isdigit(*field_start)) {
+        res = 10 * res + (*field_start) - '0';
+        ++field_start;
+    }
+    return res;
 }
 
 uint64_t sum_column(const char *path, int col) {
