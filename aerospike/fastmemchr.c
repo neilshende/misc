@@ -166,7 +166,7 @@ int main() {
     const char *path = "large.csv";
     int col = 2; // zero-based column index
     uint64_t result = sum_column(path, col);
-    printf("Sum of column %d: %lu\n", col, result);
+    printf("Sum of column %d: %llu\n", col, result);
     return 0;
 }
 
