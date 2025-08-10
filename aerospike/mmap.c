@@ -84,4 +84,3 @@ int main() {
     printf("Sum of column %d: %lu\n", col, result);
     return 0;
 }
-

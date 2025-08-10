@@ -169,6 +169,3 @@ int main() {
     printf("Sum of column %d: %llu\n", col, result);
     return 0;
 }
-
-
-

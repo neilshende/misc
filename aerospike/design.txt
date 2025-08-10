@@ -1,0 +1,78 @@
+Single-node key-value store that supports:
+    multiple disks,
+    64-bit integer keys,
+    variable-sized values (from 8 bytes to 1 MB)
+
+This can be generalized to multiple nodes as well.
+The multiple disk implementation will explore the performance improvement
+by parallelism of keys being sharded in almost round robin fashion to be
+stored on multiple disks (in sindle node implementation.)
+
+1. In Memory Data Structures:
+
+1.1  Index Table (key to disk pointer)
+Use a concurrent hash table to store key to disk location:
+struct ValuePointer {
+    uint32_t disk_id;      // Which disk
+    uint64_t offset;       // Offset on disk
+    uint32_t length;       // Length of the value
+};
+
+std::unordered_map<uint64_t, ValuePointer> key_to_location;
+A mutex will protect concurrent access to this map.
+
+1.2 Value Cache:
+For improved reads of keys, an LRU cache will be used:
+struct CacheEntry {
+    uint64_t key;
+    std::vector<uint8_t> value;
+};
+
+LRUCache<uint64_t, CacheEntry> hot_cache;
+
+1.3 Write-Ahead Log (WAL)
+We will use a separate memory buffer per disk for batching writes.
+Flush to WAL before writing to value store.
+struct WALRecord {
+    uint64_t key;
+    uint32_t value_len;
+    uint8_t value[]; // Flexible array
+};
+Flush WAL entries periodically or on sync requests. The WAL itself can be written to one disk.
+
+1.4 To support Delete, A free space manager:
+Per each dik:
+std::set<std::pair<uint64_t, uint64_t>> free_ranges; // {offset, length}
+
+2. On Disk data structures:
+
+2.1 Value Store File:
+Each disk maintains a log-structured value store file:
+"diskN/Values.dat"
+Each records in this file have following structure.
+key : 8 bytes,
+length: 4 bytes,
+value: variable length.
+
+2.2 Write-Ahead Log (WAL)
+Each disk has a write ahead log for recovery:
+"diskN/WAL"
+The format is similar to Values.dat.
+
+2.3 Index shadow map:
+To recover quickly on crash, snapshot the in-memory map is stored on disk:
+:diskN/Index.dat
+The format of this file is:
+key : 8 bytes,
+offset : 8 bytes,
+length : 4 bytes.
+This file is used at startup rebuild the in-memory hash table, and  synced to disk
+periodically.
+
+2.4 Free space map to handle Delete:
+"diskN/freemap"
+We will serialize the free space map to disk periodically to avoid fragmentation.
+Since we use log-structure store, the deletes are handled by just deleting the index.
+The data (key/value) still on the disk. Over time it will cause fragmentation on the disk.
+A seperate compaction (garbage collection) step can be run periodically to reclaim the space.
+

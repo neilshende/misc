@@ -1,0 +1,71 @@
+#include <stdio.h>
+
+// To execute C, please define "int main()"
+
+int main() {
+  for (int i = 0; i < 5; i++) {
+    printf("Hello, World\n");
+  }
+  return 0;
+}
+
+
+
+
+// KV
+
+single node.
+multiple clients.
+
+keys size: 64 bit ints. const.
+value size: variable max: 1Mb. Min: 8bytes.
+number of keys: no upper limit. 10M to 1B. records.
+
+Throughput : req.How many keys concurrently? 1 million updates.
+
+client / Server.
+
+SET, DELETE, READ
+
+SERVER:
+err SET (key, value);
+Memory / Disk.
+
+LRU Cache. map<key , value> 
+miss case: write it to storage. 
+we will need an index. read from that offset.
+
+map of key to offset. Disk. we will mmap r/w it.
+    header (current offset, etc. )
+
+create a map entry. get offset from header. update the disk with the value.
+    lseek(fd, offset);
+    write(fd, buffer, len);
+
+add it to the cache. return 0;
+
+How to handle delete? (using garbage collection)
+How to handle fragmentation.
+
+
+
+
+READ: cache Miss.
+read index, for the key.
+from index, actually read it from the disk.
+update cache.
+return 0;
+  READ(key, void *value, size_t *len);
+
+
+  1. Sharding / getting performance.
+  2. latency -- locality. (make sure there is a local copy.)
+  3. replicate to tolerate failures.
+
+1. Sharding -- number of nodes in the cluster. int64 as key.
+ranges to define number of shards, let's have a hash function.
+
+
+
+
+
