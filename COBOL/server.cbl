@@ -1,0 +1,42 @@
+ IDENTIFICATION DIVISION.
+ PROGRAM-ID. MY-SERVER.
+
+ ENVIRONMENT DIVISION.
+ DATA DIVISION.
+ WORKING-STORAGE SECTION.
+
+ 01 RECV-BUFFER.
+    05 RECV-DATA      PIC X(256).
+
+ 01 SEND-BUFFER.
+    05 SEND-DATA      PIC X(256).
+
+ 01 RECV-LEN          PIC S9(9) COMP VALUE 256.
+ 01 SEND-LEN          PIC S9(9) COMP VALUE 256.
+ 01 MSG-LEN           PIC S9(9) COMP.
+ 01 ERROR             PIC S9(9) COMP.
+
+ PROCEDURE DIVISION.
+ MAIN-LOOP.
+     PERFORM FOREVER
+        CALL "READUPDATEX" USING
+              RECV-BUFFER
+              RECV-LEN
+              MSG-LEN
+              ERROR
+        END-CALL.
+
+        IF ERROR NOT = 0
+           CONTINUE
+        END-IF.
+
+        * Process Request
+        MOVE "REPLY FROM SERVER" TO SEND-DATA.
+
+        CALL "WRITEUPDATE" USING
+              SEND-BUFFER
+              SEND-LEN
+              ERROR
+        END-CALL.
+     END-PERFORM.
+
