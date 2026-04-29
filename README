@@ -2,3 +2,6 @@ This is README file for git repo
 git clone https://githun.com/neilshende/ci
 once you do this, updated via
 git pull 
+
+The Zenodo DOI is:
+[![DOI](https://zenodo.org/badge/242249215.svg)](https://doi.org/10.5281/zenodo.19872686)
