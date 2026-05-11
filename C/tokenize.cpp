@@ -24,7 +24,8 @@ int main() {
     std::vector<std::string> tokens = tokenizeString(myString, delimiter);
 
     for (const auto& token : tokens) {
-        if (token.length()) std::cout << token << std::endl;
+        //if (token.length()) 
+             std::cout << token << std::endl;
     }
 
     return 0;

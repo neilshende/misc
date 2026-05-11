@@ -1,0 +1,7 @@
+osascript -e 'tell application "Mail"' \
+          -e 'set theMsg to make new outgoing message with properties {subject:"Hello", content:"World", visible:false}' \
+          -e 'tell theMsg' \
+          -e 'make new to recipient at end of to recipients with properties {address:"vivek_shende@hotmail.com"}' \
+          -e 'send' \
+          -e 'end tell' \
+          -e 'end tell'
